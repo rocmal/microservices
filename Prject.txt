@@ -1,0 +1,40 @@
+Project 1: Real-Time Call Center Performance Analytics Platform
+
+Business Problem Addressed — Project 1
+
+The telecom BPO was managing multiple client call queues, each with different SLAs, call volumes, agent teams, and performance expectations. However, they lacked real-time visibility into call center operations. Reporting was mostly:
+Manual (Excel reports at the end of the day)
+Delayed (data available hours or next day)
+Reactive (issues discovered after SLA breaches)
+Not standardized across clients
+Because of this, the operations team and client leads could not:
+
+Context:
+A telecom BPO had 30+ enterprise clients, each with separate inbound/outbound call queues. Leadership needed real-time visibility into call volume, agent performance, and SLA adherence.
+My Role: Lead Backend & Analytics Engineer
+Tech Stack:
+Kafka, Kafka Streams, Python, TimescaleDB/PostgreSQL, Grafana, Prometheus, Kubernetes
+
+What I Built:
+Integrated live call events from the telecom switch (SIP/CTI feeds) into Kafka topics
+Designed a multi-tenant data model to isolate metrics per client
+Implemented stream processors to compute real-time KPIs:
+Call queue wait time
+Agent occupancy
+SLA compliance % (Answered < X secs)
+First call resolution rates
+Stored time-series metrics in TimescaleDB for analytics queries
+Built Grafana Dashboards for:
+Operations supervisors (live queue & agent load)
+Client managers (daily performance & SLA trends)
+C-suite leadership (KPI scorecards)
+Configured Alerting (Slack + email) for:
+SLA drops
+High call abandonment
+Understaffing
+Impact:
+Reduced SLA violations by 22% within 3 months
+
+Eliminated manual Excel reporting → saving 4–6 hours/day
+
+Leadership gained real-time operational visibility, not next-day reports.

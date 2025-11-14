@@ -1,0 +1,43 @@
+Day-to-Day Responsibilities (Spoken Answer)
+
+On a day-to-day basis, my work typically involves a mix of pipeline development, data modeling, dashboard enhancements, and system monitoring:
+Pipeline Monitoring & Reliability
+I start my day checking Kafka consumer lag, ingestion throughput, and TimescaleDB performance dashboards.
+I review alerts from Prometheus / Alertmanager to ensure there are no delays or drops in data.
+If there are any issues, I analyze logs and metrics, identify bottlenecks, and optimize the consumers or storage layer.
+Data Modeling & Stream Processing Enhancements
+I work on improving data transformation logic in Kafka Consumers or Stream processors.
+
+This includes handling new events, evolving schema versions, cleaning or enriching raw events, and maintaining backward compatibility.
+Database Optimization
+I review performance of TimescaleDB hypertables, compression policies, retention policies, and indexing strategies.
+I ensure queries behind Grafana dashboards are fast and cost-efficient.
+Dashboard Development & KPI Alignment
+I collaborate with business teams (Operations, Product, Leadership) to understand what insights they need next.
+Then I convert those needs into:
+Metrics
+Aggregations
+Visualizations
+Alerts
+
+I update or build new dashboards in Grafana and validate them with stakeholders.
+Data Quality & Validation
+I define data validation rules, reconciliation checks, and monitoring to ensure accuracy and consistency.
+I regularly test whether the data pipeline aligns with business definitions of metrics.
+Documentation & Knowledge Sharing
+I maintain architecture diagrams, data lineage documentation, and dashboard usage notes.
+I often share updates with the engineering team or leadership on analytical insights or pipeline improvements.
+
+Continuous Improvement
+
+I explore ways to improve latency, reliability, and scalability, such as batching logic, async processing, compression strategies, or horizontal scaling.
+If needed, I prototype tools or evaluate enhancements such as Flink/Spark/Materialized Views.
+Short One-Liner Summary (For HR or Senior Leadership Rounds)
+
+I manage the full real-time analytics pipeline — ensuring data flows reliably through Kafka, is transformed correctly, stored efficiently in TimescaleDB, and visualized clearly in Grafana for decision-making.
+
+If interviewer asks: “Who do you interact with daily?”
+Engineering Team → For pipeline development & versioning
+Product Managers → To align dashboards with business KPIs
+Operations / Business Users → To validate insights and add new metrics
+DevOps / Infra → For scaling and monitoring SLAs
