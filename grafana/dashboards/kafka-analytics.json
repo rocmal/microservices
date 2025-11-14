@@ -1,0 +1,192 @@
+{
+  "id": null,
+  "title": "Kafka Order Analytics",
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 3,
+  "refresh": "1m",
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "order_status",
+        "type": "query",
+        "label": "Order Status",
+        "datasource": "MySQL",
+        "query": "SELECT DISTINCT status FROM orders ORDER BY status ASC;",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "allValue": "%",
+        "current": { "selected": true, "text": "All", "value": "%" }
+      },
+      {
+        "name": "payment_status",
+        "type": "query",
+        "label": "Payment Status",
+        "datasource": "MySQL",
+        "query": "SELECT DISTINCT status FROM payments ORDER BY status ASC;",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "allValue": "%",
+        "current": { "selected": true, "text": "All", "value": "%" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Orders",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS value FROM orders WHERE status LIKE '$order_status' AND $__timeFilter(CAST(order_date AS DATETIME));",
+          "format": "table"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 3 }
+    },
+    {
+      "type": "stat",
+      "title": "Total Revenue (Completed)",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT IFNULL(SUM(amount),0) AS value FROM payments WHERE status='completed' AND $__timeFilter(CAST(transaction_date AS DATETIME));",
+          "format": "table"
+        }
+      ],
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 3 }
+    },
+    {
+      "type": "stat",
+      "title": "Order Completion Ratio (%)",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND(100 * SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) / COUNT(*),2) AS value FROM orders WHERE $__timeFilter(CAST(order_date AS DATETIME));",
+          "format": "table"
+        }
+      ],
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 3 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Orders by Day & Status",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(order_date) AS time, status AS metric, COUNT(*) AS value FROM orders WHERE $__timeFilter(CAST(order_date AS DATETIME)) AND status LIKE '$order_status' GROUP BY status, DATE(order_date) ORDER BY DATE(order_date);",
+          "format": "time_series"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 3, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Revenue Trend (Completed Payments)",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(transaction_date) AS time, SUM(amount) AS value FROM payments WHERE status='completed' AND $__timeFilter(CAST(transaction_date AS DATETIME)) GROUP BY DATE(transaction_date) ORDER BY DATE(transaction_date);",
+          "format": "time_series"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 9, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Average Order Value (AOV)",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(order_date) AS time, ROUND(SUM(total_amount)/COUNT(*),2) AS value FROM orders WHERE $__timeFilter(CAST(order_date AS DATETIME)) GROUP BY DATE(order_date) ORDER BY DATE(order_date);",
+          "format": "time_series"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 15, "w": 12, "h": 6 }
+    },
+    {
+      "type": "barchart",
+      "title": "Orders by Status",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT status AS metric, COUNT(*) AS value FROM orders WHERE $__timeFilter(CAST(order_date AS DATETIME)) GROUP BY status ORDER BY value DESC;",
+          "format": "table"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 21, "w": 6, "h": 6 }
+    },
+    {
+      "type": "barchart",
+      "title": "Payments by Status",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT status AS metric, COUNT(*) AS value FROM payments WHERE $__timeFilter(CAST(transaction_date AS DATETIME)) GROUP BY status ORDER BY value DESC;",
+          "format": "table"
+        }
+      ],
+      "gridPos": { "x": 6, "y": 21, "w": 6, "h": 6 }
+    },
+    {
+      "type": "table",
+      "title": "Top 10 Customers by Spend",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT c.name AS Customer, ROUND(SUM(p.amount),2) AS Total_Spent FROM payments p JOIN customers c ON p.customer_id = c.customer_id WHERE p.status='completed' AND $__timeFilter(CAST(p.transaction_date AS DATETIME)) GROUP BY c.name ORDER BY Total_Spent DESC LIMIT 10;",
+          "format": "table"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 27, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Orders vs Payments (Daily)",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(order_date) AS time, COUNT(order_id) AS value FROM orders WHERE $__timeFilter(CAST(order_date AS DATETIME)) GROUP BY DATE(order_date) ORDER BY DATE(order_date);",
+          "format": "time_series",
+          "refId": "A"
+        },
+        {
+          "rawSql": "SELECT DATE(transaction_date) AS time, COUNT(payment_id) AS value FROM payments WHERE $__timeFilter(CAST(transaction_date AS DATETIME)) GROUP BY DATE(transaction_date) ORDER BY DATE(transaction_date);",
+          "format": "time_series",
+          "refId": "B"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 33, "w": 12, "h": 6 }
+    },
+    {
+      "type": "barchart",
+      "title": "Orders by Country",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT c.country AS metric, COUNT(o.order_id) AS value FROM orders o JOIN customers c ON o.customer_id = c.customer_id WHERE $__timeFilter(CAST(o.order_date AS DATETIME)) GROUP BY c.country ORDER BY value DESC LIMIT 10;",
+          "format": "table"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 39, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Average Payment Delay (Order → Payment)",
+      "datasource": "MySQL",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(o.order_date) AS time, AVG(TIMESTAMPDIFF(HOUR, o.order_date, p.transaction_date)) AS value FROM payments p JOIN orders o ON p.order_id = o.order_id WHERE p.status='completed' AND $__timeFilter(CAST(p.transaction_date AS DATETIME)) GROUP BY DATE(o.order_date) ORDER BY DATE(o.order_date);",
+          "format": "time_series"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 45, "w": 12, "h": 6 }
+    }
+  ]
+}

@@ -1,0 +1,212 @@
+{
+  "dashboard": {
+    "title": "Microservices Analytics",
+    "tags": ["kafka", "microservices", "mysql"],
+    "timezone": "browser",
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Customers",
+        "type": "stat",
+        "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "rawSql": "SELECT COUNT(*) as value FROM customers",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "blue" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Total Orders",
+        "type": "stat",
+        "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "rawSql": "SELECT COUNT(*) as value FROM orders",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Total Revenue",
+        "type": "stat",
+        "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "rawSql": "SELECT COALESCE(SUM(amount), 0) as value FROM payments WHERE status = 'completed'",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "purple" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Avg Order Value",
+        "type": "stat",
+        "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "rawSql": "SELECT COALESCE(AVG(total_amount), 0) as value FROM orders",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "decimals": 2,
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "orange" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Orders Over Time",
+        "type": "timeseries",
+        "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "rawSql": "SELECT order_date as time, COUNT(*) as value FROM orders WHERE order_date >= NOW() - INTERVAL 1 HOUR GROUP BY DATE_FORMAT(order_date, '%Y-%m-%d %H:%i:00') ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 20
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Revenue Over Time",
+        "type": "timeseries",
+        "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "rawSql": "SELECT transaction_date as time, SUM(amount) as value FROM payments WHERE transaction_date >= NOW() - INTERVAL 1 HOUR AND status = 'completed' GROUP BY DATE_FORMAT(transaction_date, '%Y-%m-%d %H:%i:00') ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 30
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Orders by Status",
+        "type": "piechart",
+        "gridPos": { "x": 0, "y": 12, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "rawSql": "SELECT status as metric, COUNT(*) as value FROM orders GROUP BY status",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Payment Methods",
+        "type": "piechart",
+        "gridPos": { "x": 8, "y": 12, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "rawSql": "SELECT payment_method as metric, COUNT(*) as value FROM payments GROUP BY payment_method",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Top Cities",
+        "type": "barchart",
+        "gridPos": { "x": 16, "y": 12, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "rawSql": "SELECT c.city as metric, COUNT(o.order_id) as value FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.city ORDER BY value DESC LIMIT 10",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Recent Orders",
+        "type": "table",
+        "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "rawSql": "SELECT o.order_id, c.name as customer_name, o.total_amount, o.status, o.order_date FROM orders o JOIN customers c ON o.customer_id = c.customer_id ORDER BY o.order_date DESC LIMIT 20",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Recent Payments",
+        "type": "table",
+        "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "rawSql": "SELECT p.payment_id, p.amount, p.payment_method, p.status, CONCAT(p.card_type, ' ****', p.last_4_digits) as card, p.transaction_date FROM payments p ORDER BY p.transaction_date DESC LIMIT 20",
+            "format": "table"
+          }
+        ]
+      }
+    ]
+  }
+}

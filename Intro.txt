@@ -1,0 +1,15 @@
+I have around 14 years of experience in backend engineering, distributed systems, and data-focused platforms. Over the years, my work has consistently revolved around building reliable, scalable systems that move data efficiently and turn it into something useful for business decision-making.
+
+In my recent roles, I’ve been responsible for designing and implementing real-time streaming data pipelines. Typically, this involves using Kafka for event ingestion, Kafka Streams or Python-based consumers for stream processing and enrichment, and then storing the processed data in TimescaleDB or PostgreSQL, especially when time-series analytics or historical trend insights are required.
+
+A large part of my work includes data modeling, schema design, indexing, and performance tuning — making sure the pipeline is not only correct but also cost-efficient and optimized for both real-time and analytical query patterns.
+
+Once the data is properly modeled, I’ve built executive-level dashboards in Grafana that provide real-time operational visibility. These dashboards usually track KPIs like order lifecycle metrics, revenue trending, SLA adherence, platform performance, and customer behavior. I work closely with leadership stakeholders to understand what insights actually matter, and then translate those needs into metrics, aggregations, and visualizations that support fast and informed decision-making.
+
+On the reliability and observability side, I’ve used Prometheus, Alertmanager, JMX exporters, and Kafka lag exporters to monitor throughput, consumer lag, system health, and pipeline stability. This ensures the platform is resilient and we detect issues proactively rather than reactively.
+
+I enjoy roles where I can own the pipeline end-to-end — from ingestion and processing to storage, optimization, and dashboard delivery — and where data is used to drive operational decisions. I think my strength is being able to bridge engineering depth with business context, making sure what we build is both technically sound and business-relevant.
+
+That’s a quick overview — and I’d be happy to go deeper into any part of it.
+
+

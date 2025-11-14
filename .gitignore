@@ -1,0 +1,26 @@
+# OS & IDE
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Node
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Docker / secrets
+.env
+security/
+*.jks
+*.pem
+*.key
+
+# Misc
+logs/
+tmp/
+__pycache__/
+mysql_data
+*.log
+node_modules/
+timescaledb_data/

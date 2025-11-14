@@ -1,0 +1,27 @@
+{
+  "name": "kafka-microservices-mysql",
+  "version": "1.0.0",
+  "description": "Kafka microservices with MySQL persistence",
+  "main": "producer.js",
+  "scripts": {
+    "setup": "node setup-database.js",
+    "producer": "node producer.js",
+    "consumer": "node consumer.js",
+    "query": "node query-data.js"
+  },
+  "keywords": [
+    "kafka",
+    "microservices",
+    "mysql",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "kafka-streams": "^5.0.0",
+    "kafkajs": "^2.2.4",
+    "mysql2": "^3.6.5",
+    "pg": "^8.16.3"
+  }
+}

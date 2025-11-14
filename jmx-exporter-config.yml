@@ -1,0 +1,40 @@
+startDelaySeconds: 0
+hostPort: 9999
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+
+whitelistObjectNames:
+  - kafka.server:*
+  - kafka.controller:*
+  - kafka.network:*
+  - kafka.log:*
+
+rules:
+  # Kafka server per second metrics (topic-level)
+  - pattern: 'kafka.server<type=(.+), name=(.+)PerSec\w*, topic=(.+)><>Count'
+    name: kafka_server_$1_$2_total
+    labels:
+      topic: "$3"
+    type: COUNTER
+
+  # Kafka server per second metrics (global)
+  - pattern: 'kafka.server<type=(.+), name=(.+)PerSec\w*><>Count'
+    name: kafka_server_$1_$2_total
+    type: COUNTER
+
+  # Kafka controller metrics
+  - pattern: 'kafka.controller<type=(.+), name=(.+)><>Count'
+    name: kafka_controller_$1_$2_total
+    type: COUNTER
+
+  # Kafka network metrics
+  - pattern: 'kafka.network<type=(.+), name=(.+)><>Count'
+    name: kafka_network_$1_$2_total
+    type: COUNTER
+
+  # Log segment / flush / cleanup
+  - pattern: 'kafka.log<type=(.+), name=(.+), topic=(.+)><>Count'
+    name: kafka_log_$1_$2_total
+    labels:
+      topic: "$3"
+    type: COUNTER
