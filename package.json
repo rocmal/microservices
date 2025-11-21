@@ -19,6 +19,8 @@
   "license": "ISC",
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
+    "dayjs": "^1.11.19",
+    "faker": "^6.6.6",
     "kafka-streams": "^5.0.0",
     "kafkajs": "^2.2.4",
     "mysql2": "^3.6.5",

@@ -295,8 +295,7 @@ async function main() {
 
     await client.query('BEGIN');
     await ensureHypertable(client);
-
-   // await seedCustomers(client, TOTAL_CUSTOMERS);
+    await seedCustomers(client, TOTAL_CUSTOMERS);
     await client.query('COMMIT');
 
     const customers = await fetchCustomerIds(client, TOTAL_CUSTOMERS);

@@ -122,8 +122,8 @@ services:
     volumes:
       - ./jmx-exporter-config.yml:/opt/bitnami/jmx-exporter/config.yml
     command:
-      - '--config.file=/opt/bitnami/jmx-exporter/config.yml'
-      - '--web.listen-address=:5556'
+      - "5556"
+      - "/opt/bitnami/jmx-exporter/config.yml"
     depends_on:
       - kafka
     networks:
