@@ -8,38 +8,6 @@ datasources:
     isDefault: true
     editable: false
 
-  - name: MySQL
-    type: mysql
-    access: proxy
-    url: localhost:3306
-    database: microservices
-    user: root
-    password: 
-    jsonData:
-      maxOpenConns: 10
-      maxIdleConns: 10
-      connMaxLifetime: 14400
-      timeInterval: "1m"
-    editable: true
-
-  - name: TimescaleDB
-    uid: TimescaleDB
-    type: postgres
-    access: proxy
-    url: timescaledb:5432
-    database: analytics
-    user: admin
-    secureJsonData:
-      password: admin123
-    jsonData:
-      sslmode: disable
-      postgresVersion: 1500
-      timescaledb: true
-      maxOpenConns: 10
-      maxIdleConns: 10
-      connMaxLifetime: 14400
-      timeInterval: "1m"
-    editable: true
-    isDefault: false
+ 
 
   
