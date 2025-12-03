@@ -1,160 +1,166 @@
-const { Client } = require("pg");
-const faker = require("faker");
-const dayjs = require("dayjs");
+import pkg from "pg";
+import { faker } from "@faker-js/faker";
 
-// PostgreSQL connection
+const { Client } = pkg;
+
 const client = new Client({
-  user: "admin",
-  host: "localhost",
-  database: "GrafanaData",
-  password: "admin123",
-  port: 5432,
+    user: "admin",
+    host: "localhost",
+    database: "analytics_sla",
+    password: "admin123",
+    port: 5432
 });
 
-// Order Types with SLA
-const SLA_CONFIG = {
-  "HotShot": { pick: 10, stage: 8, stageCmp: 5, pack: 6, ship: 20 },
-  "RockAuto": { pick: 15, stage: 10, stageCmp: 6, pack: 8, ship: 25 },
-  "Store Fulfillment": { pick: 12, stage: 8, stageCmp: 6, pack: 7, ship: 20 },
-  "Internet": { pick: 20, stage: 12, stageCmp: 8, pack: 10, ship: 30 },
-};
-
-// Utility to create random date between now - 6 months
-function randomDateInLast6Months() {
-  const now = dayjs();
-  const past = now.subtract(6, "month");
-  const randomTime = Math.random() * (now.valueOf() - past.valueOf());
-  return dayjs(past.valueOf() + randomTime);
+// Utility: add 5–10 minutes realistically
+function addMinutes(date, min = 5, max = 10) {
+    const d = new Date(date);
+    const minutesToAdd = faker.number.int({ min, max });
+    d.setMinutes(d.getMinutes() + minutesToAdd);
+    return d;
 }
 
 async function seed() {
-  await client.connect();
-  console.log("Connected.");
+    await client.connect();
 
-  // Insert SLA_CONFIG
-  for (const type of Object.keys(SLA_CONFIG)) {
-    const s = SLA_CONFIG[type];
-    await client.query(
-      `INSERT INTO sla_config (order_type, pick_sla_minutes, stage_sla_minutes, stage_cmp_sla_minutes, pack_sla_minutes, ship_sla_minutes)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       ON CONFLICT (order_type) DO NOTHING`,
-      [type, s.pick, s.stage, s.stageCmp, s.pack, s.ship]
-    );
-  }
+    console.log("Connected to TimescaleDB");
 
-  console.log("Inserted SLA Config.");
+    const days = 15;
+    const ordersPerDay = 50;
 
-  // Generate 6 months of orders
-  const days = 180;
-  for (let i = 0; i < days; i++) {
-    const dailyOrders = faker.datatype.number({ min: 40, max: 200 });
+    for (let d = 0; d < days; d++) {
+        const baseDate = faker.date.recent({ days });
+        const day = new Date(baseDate.getTime() - d * 24 * 60 * 60 * 1000);
 
-    console.log(`Generating day ${i + 1}/${days} → ${dailyOrders} orders`);
+        console.log(`\n📅 Seeding Day ${d + 1} (${day.toDateString()})`);
 
-    for (let j = 0; j < dailyOrders; j++) {
-      const orderType = faker.random.arrayElement(Object.keys(SLA_CONFIG));
+        for (let i = 0; i < ordersPerDay; i++) {
+            const orderId = faker.number.int({ min: 10000, max: 99999 });
 
-      const orderId = faker.datatype.number({ min: 10000, max: 99999 }).toString();
-      const orderDate = randomDateInLast6Months();
+            // Created date between 8 AM – 6 PM
+            const created_date = faker.date.between({
+                from: new Date(day.setHours(8, 0, 0)),
+                to: new Date(day.setHours(18, 0, 0))
+            });
 
-      const SLA = SLA_CONFIG[orderType];
+            // Insert Order
+            await client.query(
+                `INSERT INTO orders(order_id, created_date, customer_id, order_type, branch, priority, total_lines, current_status)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+                [
+                    orderId,
+                    created_date,
+                    faker.number.int({ min: 1000, max: 9999 }),
+                    faker.helpers.arrayElement(["StoreFulfillment", "HotShot", "RockAuto"]),
+                    faker.location.city(),
+                    faker.number.int({ min: 1, max: 5 }),
+                    faker.number.int({ min: 1, max: 5 }),
+                    "Created"
+                ]
+            );
 
-      // Generate timestamps in sequence
-      const pickStart = orderDate.add(faker.datatype.number({ min: 1, max: 10 }), "minute");
-      const pickEnd = pickStart.add(faker.datatype.number({ min: SLA.pick - 5, max: SLA.pick + 10 }), "minute");
+            const lineCount = faker.number.int({ min: 1, max: 5 });
 
-      const stageStart = pickEnd.add(faker.datatype.number({ min: 1, max: 5 }), "minute");
-      const stageEnd = stageStart.add(faker.datatype.number({ min: SLA.stage - 4, max: SLA.stage + 8 }), "minute");
+            for (let ln = 0; ln < lineCount; ln++) {
+                const id = faker.number.int({ min: 100000, max: 999999 });
 
-      const packStart = stageEnd.add(faker.datatype.number({ min: 1, max: 5 }), "minute");
-      const packEnd = packStart.add(faker.datatype.number({ min: SLA.pack - 3, max: SLA.pack + 5 }), "minute");
+                // Build realistic minute-based flow
+                const order_date = created_date;
+                const pick_start = addMinutes(order_date);
+                const pick_complete = addMinutes(pick_start);
+                const stage_start = addMinutes(pick_complete);
+                const stage_complete = addMinutes(stage_start);
+                const pack_start = addMinutes(stage_complete);
+                const pack_complete = addMinutes(pack_start);
+                const ship_date = addMinutes(pack_complete);
+                const invoice_date = addMinutes(ship_date);
 
-      const shipDate = packEnd.add(faker.datatype.number({ min: 5, max: 20 }), "minute");
+                const event_date = ship_date; // latest point
 
-      const finalStatus = "Shipped";
+                // Insert Order Line
+                await client.query(
+                    `INSERT INTO order_lines
+                    (id, event_date, order_id, order_number, order_type, location,
+                        order_date, pick_start_date, pick_complete_date,
+                        stage_start_date, stage_complete_date,
+                        pack_start_date, pack_complete_date,
+                        ship_date, invoice_date, status)
+                    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+                    [
+                        id,
+                        event_date,
+                        orderId,
+                        `ORD-${orderId}-${ln + 1}`,
+                        faker.helpers.arrayElement(["StoreFulfillment", "HotShot", "RockAuto"]),
+                        faker.location.buildingNumber(),
+                        order_date,
+                        pick_start,
+                        pick_complete,
+                        stage_start,
+                        stage_complete,
+                        pack_start,
+                        pack_complete,
+                        ship_date,
+                        invoice_date,
+                        "Completed"
+                    ]
+                );
 
-      // Insert Order
-      await client.query(
-        `INSERT INTO orders
-         (order_id, customer_id, order_type, branch, priority, total_lines, created_at, target_ship_time, actual_ship_time, current_status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-        `,
-        [
-          orderId,
-          faker.datatype.number({ min: 1000, max: 9000 }).toString(),
-          orderType,
-          faker.random.arrayElement(["350", "420", "550", "600"]),
-          5,
-          1,
-          orderDate.toISOString(),
-          shipDate.subtract(SLA.ship, "minute").toISOString(),
-          shipDate.toISOString(),
-          finalStatus,
-        ]
-      );
+                const stages = [
+                    { status: "Picking", start: pick_start, end: pick_complete },
+                    { status: "Staging", start: stage_start, end: stage_complete },
+                    { status: "Packing", start: pack_start, end: pack_complete },
+                    { status: "Shipping", start: pack_complete, end: ship_date }
+                ];
 
-      // Insert Order Lines
-      await client.query(
-        `INSERT INTO order_lines
-         (order_number, order_type, location, status, order_dt, pick_strt_dt, pick_cmp_dt, stage_strt_dt, stage_cmp_dt,
-          pack_strt_dt, pack_cmp_dt, ship_dt, invoice_dt,
-          pick_sla_minutes, stage_sla_minutes, stage_cmp_sla_minutes, pack_sla_minutes, ship_sla_minutes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
-        `,
-        [
-          orderId,
-          orderType,
-          faker.random.arrayElement(["350", "420", "550", "600"]),
-          "Ship",
-          orderDate.toISOString(),
-          pickStart.toISOString(),
-          pickEnd.toISOString(),
-          stageStart.toISOString(),
-          stageEnd.toISOString(),
-          packStart.toISOString(),
-          packEnd.toISOString(),
-          shipDate.toISOString(),
-          shipDate.toISOString(),
-          SLA.pick,
-          SLA.stage,
-          SLA.stageCmp,
-          SLA.pack,
-          SLA.ship,
-        ]
-      );
+                for (const st of stages) {
+                    const duration = Math.floor((st.end - st.start) / 1000);
+                    const slaMinutes = faker.number.int({ min: 10, max: 60 });
+                    const slaMet = duration <= slaMinutes * 60;
 
-      // Insert Status History
-      const statusHistory = [
-        { status: "Pending", start: orderDate, end: pickStart },
-        { status: "Picking", start: pickStart, end: pickEnd },
-        { status: "Staging", start: stageStart, end: stageEnd },
-        { status: "Packing", start: packStart, end: packEnd },
-        { status: "Shipped", start: shipDate, end: null },
-      ];
+                    // Insert order status history
+                    await client.query(
+                        `INSERT INTO order_status_history
+                         (id, entered_date, order_id, order_line_id, status,
+                          completed_date, duration_seconds, sla_target_minutes, sla_met)
+                         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+                        [
+                            faker.number.int({ min: 1000000, max: 9999999 }),
+                            st.start,
+                            orderId,
+                            id,
+                            st.status,
+                            st.end,
+                            duration,
+                            slaMinutes,
+                            slaMet
+                        ]
+                    );
 
-      for (const s of statusHistory) {
-        await client.query(
-          `INSERT INTO order_status_history
-            (order_id, status, entered_at, completed_at, duration_seconds, sla_target_minutes, sla_met, worker_id)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-        `,
-          [
-            orderId,
-            s.status,
-            s.start.toISOString(),
-            s.end ? s.end.toISOString() : null,
-            s.end ? s.end.diff(s.start, "second") : null,
-            0,
-            true,
-            faker.datatype.number({ min: 100, max: 999 }).toString(),
-          ]
-        );
-      }
+                    // Insert SLA events
+                    await client.query(
+                        `INSERT INTO sla_events
+                         (id, detected_date, order_id, order_line_id, stage,
+                          duration_seconds, sla_target_minutes, sla_met, breach)
+                         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+                        [
+                            faker.number.int({ min: 2000000, max: 9999999 }),
+                            st.end,
+                            orderId,
+                            id,
+                            st.status,
+                            duration,
+                            slaMinutes,
+                            slaMet,
+                            !slaMet
+                        ]
+                    );
+                }
+            }
+        }
     }
-  }
 
-  console.log("Finished seeding 6 months of data.");
-  await client.end();
+    console.log("\n🎉 DONE! Seed completed for 15 days.\n");
+    await client.end();
 }
 
-seed().catch(console.error);
+seed().catch(err => console.error(err));

@@ -24,3 +24,5 @@ mysql_data
 *.log
 node_modules/
 timescaledb_data/
+
+schema/
