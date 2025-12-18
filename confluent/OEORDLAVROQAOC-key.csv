@@ -1,0 +1,4 @@
+fieldName,fieldType,doc,default
+LBRNCH,"""double""",,
+LLINE,"""double""",,
+LORDER,"""double""",,

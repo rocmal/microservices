@@ -1,0 +1,2024 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "${ds}",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SLA Met"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 14,
+        "x": 0,
+        "y": 0
+      },
+      "id": 11,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT sa.bucket AS time, sa.sla_status AS metric, SUM(sa.order_count) AS value FROM sla_status_5min_agg sa LEFT JOIN order_type_master otm ON sa.order_type_id = otm.id WHERE sa.bucket >= $__timeFrom() AND sa.bucket < $__timeTo() AND sa.status = 'picked' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') GROUP BY sa.bucket, sa.sla_status ORDER BY sa.bucket, sa.sla_status",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "$__time",
+                "parameters": [
+                  {
+                    "name": "",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_lines"
+        }
+      ],
+      "title": "Section#1: Order Picking SLA Status (Refreshes every 5 mins)",
+      "type": "barchart"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": 0
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=picked",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "Moving Slow": {
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "SLA Met": {
+                        "color": "green",
+                        "index": 2
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=picked"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time Remaining"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "transparent",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": -999
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "row_type"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 9,
+        "x": 14,
+        "y": 0
+      },
+      "id": 25,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \"Order Type\", \"Status\", \"Count\", \"Order ID\", \"Time Remaining\" FROM (SELECT 1 AS sort_order, 'SUMMARY' AS row_type, cs.order_type AS \"Order Type\", cs.sla_status AS \"Status\", cs.order_count::text AS \"Count\", NULL::text AS \"Order ID\", NULL::numeric AS \"Time Remaining\" FROM current_sla_summary cs WHERE cs.status = 'picked' AND (cs.order_type ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') UNION ALL SELECT 2 as sort_order, 'DETAIL' as row_type, otm.name AS \"Order Type\", CASE WHEN osh.duration_seconds >= (osh.sla_target_minutes * 60) THEN 'Delayed' WHEN osh.duration_seconds > (osh.sla_target_minutes * 60 * 0.25) THEN 'Moving Slow' ELSE 'SLA Met' END AS \"Status\", NULL::text AS \"Count\", osh.order_line_id::text AS \"Order ID\", osh.sla_target_minutes - ROUND(osh.duration_seconds / 60.0, 0) AS \"Time Remaining\" FROM order_status_history osh LEFT JOIN order_type_master otm ON osh.order_type_id = otm.id WHERE $__timeFilter(osh.entered_date) AND osh.status = 'picked' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*')) AS combined ORDER BY sort_order, \"Order Type\", CASE WHEN \"Status\" = 'Delayed' THEN 1 WHEN \"Status\" = 'Moving Slow' THEN 2 ELSE 3 END, \"Time Remaining\" ASC NULLS LAST",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_lines"
+        }
+      ],
+      "title": "Section#1: Order Picking - Summary & Details",
+      "type": "table"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SLA Met"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 14,
+        "x": 0,
+        "y": 11
+      },
+      "id": 26,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT sa.bucket AS time, sa.sla_status AS metric, SUM(sa.order_count) AS value FROM sla_status_5min_agg sa LEFT JOIN order_type_master otm ON sa.order_type_id = otm.id WHERE sa.bucket >= $__timeFrom() AND sa.bucket < $__timeTo() AND sa.status = 'staged' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') GROUP BY sa.bucket, sa.sla_status ORDER BY sa.bucket, sa.sla_status",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "$__time",
+                "parameters": [
+                  {
+                    "name": "",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_lines"
+        }
+      ],
+      "title": "Section#2: Order Staging SLA Status (Refreshes every 5 mins)",
+      "type": "barchart"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": 0
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=staged",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "Moving Slow": {
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "SLA Met": {
+                        "color": "green",
+                        "index": 2
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=staged"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time Remaining"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "transparent",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": -999
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "row_type"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 9,
+        "x": 14,
+        "y": 11
+      },
+      "id": 27,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \"Order Type\", \"Status\", \"Count\", \"Order ID\", \"Time Remaining\" FROM (SELECT 1 AS sort_order, 'SUMMARY' AS row_type, cs.order_type AS \"Order Type\", cs.sla_status AS \"Status\", cs.order_count::text AS \"Count\", NULL::text AS \"Order ID\", NULL::numeric AS \"Time Remaining\" FROM current_sla_summary cs WHERE cs.status = 'staged' AND (cs.order_type ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') UNION ALL SELECT 2 as sort_order, 'DETAIL' as row_type, otm.name AS \"Order Type\", CASE WHEN osh.duration_seconds >= (osh.sla_target_minutes * 60) THEN 'Delayed' WHEN osh.duration_seconds > (osh.sla_target_minutes * 60 * 0.25) THEN 'Moving Slow' ELSE 'SLA Met' END AS \"Status\", NULL::text AS \"Count\", osh.order_line_id::text AS \"Order ID\", osh.sla_target_minutes - ROUND(osh.duration_seconds / 60.0, 0) AS \"Time Remaining\" FROM order_status_history osh LEFT JOIN order_type_master otm ON osh.order_type_id = otm.id WHERE $__timeFilter(osh.entered_date) AND osh.status = 'staged' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*')) AS combined ORDER BY sort_order, \"Order Type\", CASE WHEN \"Status\" = 'Delayed' THEN 1 WHEN \"Status\" = 'Moving Slow' THEN 2 ELSE 3 END, \"Time Remaining\" ASC NULLS LAST",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_lines"
+        }
+      ],
+      "title": "Section#2: Order Staging - Summary & Details",
+      "type": "table"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SLA Met"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 14,
+        "x": 0,
+        "y": 22
+      },
+      "id": 28,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT sa.bucket AS time, sa.sla_status AS metric, SUM(sa.order_count) AS value FROM sla_status_5min_agg sa LEFT JOIN order_type_master otm ON sa.order_type_id = otm.id WHERE sa.bucket >= $__timeFrom() AND sa.bucket < $__timeTo() AND sa.status = 'shipped' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') GROUP BY sa.bucket, sa.sla_status ORDER BY sa.bucket, sa.sla_status",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "$__time",
+                "parameters": [
+                  {
+                    "name": "",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_lines"
+        }
+      ],
+      "title": "Section#3:Order Ship Verify SLA Status (Refreshes every 5 mins)",
+      "type": "barchart"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": 0
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=shipped",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "Moving Slow": {
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "SLA Met": {
+                        "color": "green",
+                        "index": 2
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=shipped"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time Remaining"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "transparent",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": -999
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0
+                    },
+                    {
+                      "color": "purple",
+                      "value": 100
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "row_type"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 9,
+        "x": 14,
+        "y": 22
+      },
+      "id": 29,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \"Order Type\", \"Status\", \"Count\", \"Order ID\", \"Time Remaining\" FROM (SELECT 1 AS sort_order, 'SUMMARY' AS row_type, cs.order_type AS \"Order Type\", cs.sla_status AS \"Status\", cs.order_count::text AS \"Count\", NULL::text AS \"Order ID\", NULL::numeric AS \"Time Remaining\" FROM current_sla_summary cs WHERE cs.status = 'shipped' AND (cs.order_type ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') UNION ALL SELECT 2 as sort_order, 'DETAIL' as row_type, otm.name AS \"Order Type\", CASE WHEN osh.duration_seconds >= (osh.sla_target_minutes * 60) THEN 'Delayed' WHEN osh.duration_seconds > (osh.sla_target_minutes * 60 * 0.25) THEN 'Moving Slow' ELSE 'SLA Met' END AS \"Status\", NULL::text AS \"Count\", osh.order_line_id::text AS \"Order ID\", osh.sla_target_minutes - ROUND(osh.duration_seconds / 60.0, 0) AS \"Time Remaining\" FROM order_status_history osh LEFT JOIN order_type_master otm ON osh.order_type_id = otm.id WHERE $__timeFilter(osh.entered_date) AND osh.status = 'shipped' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*')) AS combined ORDER BY sort_order, \"Order Type\", CASE WHEN \"Status\" = 'Delayed' THEN 1 WHEN \"Status\" = 'Moving Slow' THEN 2 ELSE 3 END, \"Time Remaining\" ASC NULLS LAST",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_lines"
+        }
+      ],
+      "title": "Section#3: Order Ship Verify - Summary & Details",
+      "type": "table"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SLA Met"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 14,
+        "x": 0,
+        "y": 33
+      },
+      "id": 30,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT sa.bucket AS time, sa.sla_status AS metric, SUM(sa.order_count) AS value FROM sla_status_5min_agg sa LEFT JOIN order_type_master otm ON sa.order_type_id = otm.id WHERE sa.bucket >= $__timeFrom() AND sa.bucket < $__timeTo() AND sa.status = 'stage_complete' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') GROUP BY sa.bucket, sa.sla_status ORDER BY sa.bucket, sa.sla_status",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "$__time",
+                "parameters": [
+                  {
+                    "name": "",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_status_history"
+        }
+      ],
+      "title": "Section#4: Stage Complete SLA Status (Refreshes every 5 mins)",
+      "type": "barchart"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": 0
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=stage_complete",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "Moving Slow": {
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "SLA Met": {
+                        "color": "green",
+                        "index": 2
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=stage_complete"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time Remaining"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "transparent",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": -999
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "row_type"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 9,
+        "x": 14,
+        "y": 33
+      },
+      "id": 32,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \"Order Type\", \"Status\", \"Count\", \"Order ID\", \"Time Remaining\" FROM (SELECT 1 AS sort_order, 'SUMMARY' AS row_type, cs.order_type AS \"Order Type\", cs.sla_status AS \"Status\", cs.order_count::text AS \"Count\", NULL::text AS \"Order ID\", NULL::numeric AS \"Time Remaining\" FROM current_sla_summary cs WHERE cs.status = 'stage_complete' AND (cs.order_type ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') UNION ALL SELECT 2 as sort_order, 'DETAIL' as row_type, otm.name AS \"Order Type\", CASE WHEN osh.duration_seconds >= (osh.sla_target_minutes * 60) THEN 'Delayed' WHEN osh.duration_seconds > (osh.sla_target_minutes * 60 * 0.25) THEN 'Moving Slow' ELSE 'SLA Met' END AS \"Status\", NULL::text AS \"Count\", osh.order_line_id::text AS \"Order ID\", osh.sla_target_minutes - ROUND(osh.duration_seconds / 60.0, 0) AS \"Time Remaining\" FROM order_status_history osh LEFT JOIN order_type_master otm ON osh.order_type_id = otm.id WHERE $__timeFilter(osh.entered_date) AND osh.status = 'stage_complete' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*')) AS combined ORDER BY sort_order, \"Order Type\", CASE WHEN \"Status\" = 'Delayed' THEN 1 WHEN \"Status\" = 'Moving Slow' THEN 2 ELSE 3 END, \"Time Remaining\" ASC NULLS LAST",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_status_history"
+        }
+      ],
+      "title": "Section#4: Stage Complete - Summary & Details",
+      "type": "table"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SLA Met"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 14,
+        "x": 0,
+        "y": 44
+      },
+      "id": 31,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT sa.bucket AS time, sa.sla_status AS metric, SUM(sa.order_count) AS value FROM sla_status_5min_agg sa LEFT JOIN order_type_master otm ON sa.order_type_id = otm.id WHERE sa.bucket >= $__timeFrom() AND sa.bucket < $__timeTo() AND sa.status = 'packed' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') GROUP BY sa.bucket, sa.sla_status ORDER BY sa.bucket, sa.sla_status",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "$__time",
+                "parameters": [
+                  {
+                    "name": "",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_status_history"
+        }
+      ],
+      "title": "Section#5: Pack SLA Status (Refreshes every 5 mins)",
+      "type": "barchart"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": 0
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=packed",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "Moving Slow": {
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "SLA Met": {
+                        "color": "green",
+                        "index": 2
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Order ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=packed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time Remaining"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "transparent",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": -999
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "row_type"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 9,
+        "x": 14,
+        "y": 44
+      },
+      "id": 33,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "GrafanaData",
+          "datasource": "${ds}",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \"Order Type\", \"Status\", \"Count\", \"Order ID\", \"Time Remaining\" FROM (SELECT 1 AS sort_order, 'SUMMARY' AS row_type, cs.order_type AS \"Order Type\", cs.sla_status AS \"Status\", cs.order_count::text AS \"Count\", NULL::text AS \"Order ID\", NULL::numeric AS \"Time Remaining\" FROM current_sla_summary cs WHERE cs.status = 'packed' AND (cs.order_type ~ '${order_type:regex}' OR '${order_type:regex}' = '.*') UNION ALL SELECT 2 as sort_order, 'DETAIL' as row_type, otm.name AS \"Order Type\", CASE WHEN osh.duration_seconds >= (osh.sla_target_minutes * 60) THEN 'Delayed' WHEN osh.duration_seconds > (osh.sla_target_minutes * 60 * 0.25) THEN 'Moving Slow' ELSE 'SLA Met' END AS \"Status\", NULL::text AS \"Count\", osh.order_line_id::text AS \"Order ID\", osh.sla_target_minutes - ROUND(osh.duration_seconds / 60.0, 0) AS \"Time Remaining\" FROM order_status_history osh LEFT JOIN order_type_master otm ON osh.order_type_id = otm.id WHERE $__timeFilter(osh.entered_date) AND osh.status = 'packed' AND (otm.name ~ '${order_type:regex}' OR '${order_type:regex}' = '.*')) AS combined ORDER BY sort_order, \"Order Type\", CASE WHEN \"Status\" = 'Delayed' THEN 1 WHEN \"Status\" = 'Moving Slow' THEN 2 ELSE 3 END, \"Time Remaining\" ASC NULLS LAST",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "order_status_history"
+        }
+      ],
+      "title": "Section#5: Pack - Summary & Details",
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 42,
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "sla_analytics",
+          "value": "df5h7b8vwgyrkf"
+        },
+        "label": "Data source",
+        "name": "ds",
+        "options": [],
+        "query": "postgres",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "${ds}",
+        "definition": "SELECT DISTINCT name FROM order_type_master ORDER BY name",
+        "includeAll": true,
+        "label": "Order Type",
+        "multi": true,
+        "name": "order_type",
+        "options": [],
+        "query": "SELECT DISTINCT name FROM order_type_master ORDER BY name",
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "type": "custom",
+        "name": "workflow_status",
+        "label": "Workflow Stage",
+        "query": "picked,staged,shipped,stage_complete,packed",
+        "current": {
+          "text": "picked",
+          "value": "picked"
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "America/New_York",
+  "title": "Test Link Dashboard",
+  "uid": "TEST_LINK_DASHBOARD",
+  "version": 1
+}

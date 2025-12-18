@@ -1,0 +1,6 @@
+fieldName,fieldType,doc,default
+OBR,"""double""",,
+OCO,"""double""",,
+ONO,"""double""",,
+OWHSE,"""double""",,
+PICKER,"""string""",,

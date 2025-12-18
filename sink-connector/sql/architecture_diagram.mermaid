@@ -1,0 +1,51 @@
+graph TB
+    subgraph "Phase 1: Raw Data Ingestion (JDBC Sink)"
+        K1[Kafka: OEORDHAVROQAOC] --> J1[JDBC Sink]
+        K2[Kafka: OEORDLAVROQAOC] --> J2[JDBC Sink]
+        K3[Kafka: WMOPCKHAVROQAOC] --> J3[JDBC Sink]
+        K4[Kafka: SHIP_CODEAVROQAOC] --> J4[JDBC Sink]
+        K5[Kafka: DL_RTEAVROQAOC] --> J5[JDBC Sink]
+        
+        J1 --> T1[(raw_oeordh)]
+        J2 --> T2[(raw_oeordl)]
+        J3 --> T3[(raw_wmopckh)]
+        J4 --> T4[(raw_ship_code)]
+        J5 --> T5[(raw_dl_rte)]
+    end
+    
+    subgraph "Phase 2: Business Logic (Choose One)"
+        T1 -.-> OPT1[Option A: PostgreSQL View/Materialized View]
+        T2 -.-> OPT1
+        T3 -.-> OPT1
+        T4 -.-> OPT1
+        T5 -.-> OPT1
+        
+        T1 -.-> OPT2[Option B: Node.js ETL Service]
+        T2 -.-> OPT2
+        T3 -.-> OPT2
+        T4 -.-> OPT2
+        T5 -.-> OPT2
+        
+        T1 -.-> OPT3[Option C: DBT Transformation]
+        T2 -.-> OPT3
+        T3 -.-> OPT3
+        T4 -.-> OPT3
+        T5 -.-> OPT3
+    end
+    
+    subgraph "Phase 3: Final Output"
+        OPT1 --> FINAL[(order_fulfillment_metrics)]
+        OPT2 --> FINAL
+        OPT3 --> FINAL
+        
+        FINAL --> DASH[Grafana Dashboard]
+    end
+    
+    style J1 fill:#90EE90
+    style J2 fill:#90EE90
+    style J3 fill:#90EE90
+    style J4 fill:#90EE90
+    style J5 fill:#90EE90
+    style OPT1 fill:#FFD700
+    style OPT2 fill:#87CEEB
+    style OPT3 fill:#DDA0DD

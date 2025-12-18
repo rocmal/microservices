@@ -1,0 +1,321 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 7,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "P40AE60E18F02DE32"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "dataset": "grafana",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P40AE60E18F02DE32"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT bucket AS \"time\", sum(order_count) AS \"Order Count\" FROM sla_status_5min_agg sa JOIN order_type_master otm ON sa.order_type_id = otm.id WHERE $__timeFilter(bucket) AND sa.status = '${workflow_status}' AND sa.sla_status = '${sla_status}' AND ('$__all' IN (${order_type:singlequote}) OR otm.name IN (${order_type:singlequote})) GROUP BY 1 ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "SLA Trend (5-minute buckets)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "P40AE60E18F02DE32"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "dataset": "grafana",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P40AE60E18F02DE32"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT osh.order_line_id AS \"Order ID\", otm.name AS \"Order Type\", osh.status AS \"Workflow Stage\", CASE WHEN osh.duration_seconds >= (osh.sla_target_minutes * 60) THEN 'Delayed' WHEN osh.duration_seconds > (osh.sla_target_minutes * 60 * 0.25) THEN 'Moving Slow' ELSE 'SLA Met' END AS \"SLA Status\", (osh.sla_target_minutes - ROUND(osh.duration_seconds / 60.0, 0)) AS \"Time Remaining\", osh.duration_seconds AS \"Duration (sec)\", osh.entered_date AS \"Entered Time\" FROM order_status_history osh JOIN order_type_master otm ON osh.order_type_id = otm.id WHERE $__timeFilter(osh.entered_date) AND osh.status = '${workflow_status}' AND (CASE WHEN osh.duration_seconds >= (osh.sla_target_minutes * 60) THEN 'Delayed' WHEN osh.duration_seconds > (osh.sla_target_minutes * 60 * 0.25) THEN 'Moving Slow' ELSE 'SLA Met' END) = '${sla_status}' AND ('$__all' IN (${order_type:singlequote}) OR otm.name IN (${order_type:singlequote})) ORDER BY osh.entered_date DESC LIMIT 500",
+          "refId": "A"
+        }
+      ],
+      "title": "Order-Level SLA Details",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "P40AE60E18F02DE32"
+        },
+        "definition": "SELECT DISTINCT name FROM order_type_master ORDER BY name;",
+        "includeAll": true,
+        "label": "Order Type",
+        "name": "order_type",
+        "options": [
+          {
+            "selected": false,
+            "text": "Ecommerce",
+            "value": "Ecommerce"
+          },
+          {
+            "selected": false,
+            "text": "Hotshot",
+            "value": "Hotshot"
+          },
+          {
+            "selected": false,
+            "text": "RockAuto",
+            "value": "RockAuto"
+          },
+          {
+            "selected": false,
+            "text": "StoreFulfillment",
+            "value": "StoreFulfillment"
+          }
+        ],
+        "query": "SELECT DISTINCT name FROM order_type_master ORDER BY name;",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "SLA Met",
+          "value": "SLA Met"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "P40AE60E18F02DE32"
+        },
+        "definition": "SELECT DISTINCT sla_status FROM current_sla_summary;",
+        "includeAll": false,
+        "label": "SLA Status",
+        "name": "sla_status",
+        "options": [
+          {
+            "selected": true,
+            "text": "SLA Met",
+            "value": "SLA Met"
+          },
+          {
+            "selected": false,
+            "text": "Moving Slow",
+            "value": "Moving Slow"
+          },
+          {
+            "selected": false,
+            "text": "Delayed",
+            "value": "Delayed"
+          }
+        ],
+        "query": "SELECT DISTINCT sla_status FROM current_sla_summary;",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "picked",
+          "value": "picked"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "P40AE60E18F02DE32"
+        },
+        "definition": "select  DISTINCT status from sla_status_5min_agg",
+        "label": "Workflow Stage",
+        "name": "workflow_status",
+        "options": [
+          {
+            "selected": true,
+            "text": "picked",
+            "value": "picked"
+          },
+          {
+            "selected": false,
+            "text": "staged",
+            "value": "staged"
+          },
+          {
+            "selected": false,
+            "text": "shipped",
+            "value": "shipped"
+          },
+          {
+            "selected": false,
+            "text": "stage_complete",
+            "value": "stage_complete"
+          },
+          {
+            "selected": false,
+            "text": "packed",
+            "value": "packed"
+          }
+        ],
+        "query": "select  DISTINCT status from sla_status_5min_agg",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "SLA Detail Viewer",
+  "uid": "DETAIL_SLA",
+  "version": 24
+}
