@@ -3,10 +3,7 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": {
-          "type": "grafana",
-          "uid": "-- Grafana --"
-        },
+        "datasource": "${ds}",
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -22,10 +19,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -148,10 +142,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -187,10 +178,7 @@
       "type": "barchart"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -215,7 +203,16 @@
                 "value": 0
               }
             ]
-          }
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=picked",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
         },
         "overrides": [
           {
@@ -308,6 +305,16 @@
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=picked"
+                  }
+                ]
               }
             ]
           },
@@ -375,10 +382,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -408,10 +412,7 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -534,10 +535,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -573,10 +571,7 @@
       "type": "barchart"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -601,7 +596,16 @@
                 "value": 0
               }
             ]
-          }
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=staged",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
         },
         "overrides": [
           {
@@ -694,6 +698,16 @@
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=staged"
+                  }
+                ]
               }
             ]
           },
@@ -761,10 +775,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -794,10 +805,7 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -920,10 +928,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -959,10 +964,7 @@
       "type": "barchart"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -987,7 +989,16 @@
                 "value": 0
               }
             ]
-          }
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=shipped",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
         },
         "overrides": [
           {
@@ -1080,6 +1091,16 @@
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=shipped"
+                  }
+                ]
               }
             ]
           },
@@ -1152,10 +1173,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1185,10 +1203,7 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1311,10 +1326,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -1350,10 +1362,7 @@
       "type": "barchart"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1378,7 +1387,16 @@
                 "value": 0
               }
             ]
-          }
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=stage_complete",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
         },
         "overrides": [
           {
@@ -1459,6 +1477,16 @@
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=stage_complete"
+                  }
+                ]
               }
             ]
           },
@@ -1526,10 +1554,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1559,10 +1584,7 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1685,10 +1707,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -1724,10 +1743,7 @@
       "type": "barchart"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "df5h7b8vwgyrkf"
-      },
+      "datasource": "${ds}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1752,7 +1768,16 @@
                 "value": 0
               }
             ]
-          }
+          },
+          "links": [
+            {
+              "title": "Drill Down \u2192 SLA Detail",
+              "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=packed",
+              "targetBlank": true,
+              "internal": true,
+              "type": "link"
+            }
+          ]
         },
         "overrides": [
           {
@@ -1833,6 +1858,16 @@
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Drill Down",
+                    "url": "/d/DETAIL_SLA/sla-detail-viewer?orgId=1&from=${__from}&to=${__to}&timezone=browser&${order_type:queryparam}&var-sla_status=${__series.name:percentencode}&var-workflow_status=packed"
+                  }
+                ]
               }
             ]
           },
@@ -1900,10 +1935,7 @@
       "targets": [
         {
           "dataset": "GrafanaData",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "df5h7b8vwgyrkf"
-          },
+          "datasource": "${ds}",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1964,10 +1996,7 @@
             "$__all"
           ]
         },
-        "datasource": {
-          "type": "grafana-postgresql-datasource",
-          "uid": "df5h7b8vwgyrkf"
-        },
+        "datasource": "${ds}",
         "definition": "SELECT DISTINCT name FROM order_type_master ORDER BY name",
         "includeAll": true,
         "label": "Order Type",
@@ -1977,6 +2006,16 @@
         "query": "SELECT DISTINCT name FROM order_type_master ORDER BY name",
         "refresh": 2,
         "type": "query"
+      },
+      {
+        "type": "custom",
+        "name": "workflow_status",
+        "label": "Workflow Stage",
+        "query": "picked,staged,shipped,stage_complete,packed",
+        "current": {
+          "text": "picked",
+          "value": "picked"
+        }
       }
     ]
   },

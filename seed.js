@@ -1,205 +1,276 @@
-const { Client } = require("pg");
-const { faker } = require("@faker-js/faker");
-const dayjs = require("dayjs");
+
+import pkg from "pg";
+import { faker } from "@faker-js/faker";
+
+const { Client } = pkg;
 
 const client = new Client({
-  user: "admin",
-  host: "localhost",
-  database: "grafanadata",
-  password: "admin123",
-  port: 5432,
+  user: process.env.PGUSER || "admin",
+  host: process.env.PGHOST || "localhost",
+  database: process.env.PGDATABASE || "grafana",
+  password: process.env.PGPASSWORD || "admin123",
+  port: Number(process.env.PGPORT || 5432),
 });
 
-// SLA config
-const SLA_CONFIG = {
-  HotShot: { pick: 10, stage: 8, stageCmp: 5, pack: 6, ship: 20 },
-  RockAuto: { pick: 15, stage: 10, stageCmp: 6, pack: 8, ship: 25 },
-  "Store Fulfillment": { pick: 12, stage: 8, stageCmp: 6, pack: 7, ship: 20 },
-  Internet: { pick: 20, stage: 12, stageCmp: 8, pack: 10, ship: 30 },
-};
-
-function randomDateInLast6Months() {
-  const now = dayjs();
-  const past = now.subtract(6, "month");
-  const randomTime = faker.number.int({ min: past.valueOf(), max: now.valueOf() });
-  return dayjs(randomTime);
+function addMinutes(date, minutes) {
+  return new Date(date.getTime() + minutes * 60 * 1000);
 }
 
-// Chunk helper for batch inserts
-function chunk(array, size) {
-  const batches = [];
-  for (let i = 0; i < array.length; i += size) {
-    batches.push(array.slice(i, i + size));
-  }
-  return batches;
+async function getSla(orderType, createdDate) {
+  const res = await client.query(
+    `SELECT * FROM get_sla_for_order($1, $2)`,
+    [orderType, createdDate]
+  );
+  return res.rows[0] || {};
 }
 
-async function seed() {
-  await client.connect();
-  console.log("Connected.");
-
-  // Insert SLA config
-  for (const type of Object.keys(SLA_CONFIG)) {
-    const s = SLA_CONFIG[type];
-    await client.query(
-      `INSERT INTO sla_config 
-        (order_type, pick_sla_minutes, stage_sla_minutes, stage_cmp_sla_minutes, pack_sla_minutes, ship_sla_minutes)
-       VALUES ($1,$2,$3,$4,$5,$6) 
-       ON CONFLICT (order_type) DO NOTHING`,
-      [type, s.pick, s.stage, s.stageCmp, s.pack, s.ship]
-    );
+function chooseCreatedDate(orderType, wantBeforeCutoff = null) {
+  const d = new Date();
+  d.setSeconds(0, 0);
+  if (orderType === "Rock Auto") {
+    const before = wantBeforeCutoff ?? faker.datatype.boolean();
+    // Force around the 1 PM boundary to exercise the rule
+    d.setHours(before ? 12 : 14, 30, 0, 0);
   }
+  return d;
+}
 
-  console.log("SLA config inserted.");
+async function insertRandomOrder({ ensureBreachPick = false, ensureBreachStage = false, ensureSLAMet = false, forcedOrderType = null, forcedCreatedDate = null } = {}) {
+  const orderId = faker.number.int({ min: 10000, max: 99999 });
 
-  // Generate 6 months of data
-  const days = 180;
-  const rowsOrders = [];
-  const rowsLines = [];
-  const rowsHistory = [];
+  // Align order types with sla_config
+  const orderType = forcedOrderType || faker.helpers.arrayElement([
+    "Hotshot",
+    "Ecommerce",
+    "Store Fullfillment",
+    "Rock Auto",
+  ]);
 
-  for (let d = 1; d <= days; d++) {
-    const dailyOrders = faker.number.int({ min: 40, max: 150 });
+  // Get order_type_id from order_type_master
+  const orderTypeRes = await client.query(
+    `SELECT id FROM order_type_master WHERE name = $1`,
+    [orderType]
+  );
+  const orderTypeId = orderTypeRes.rows[0]?.id;
 
-    console.log(`Generating day ${d}/${days} → ${dailyOrders} orders`);
+  // Choose created_date to intentionally hit Rock Auto rule branches as needed
+  const created_date = forcedCreatedDate || chooseCreatedDate(orderType, ensureBreachStage ? faker.datatype.boolean() : null);
+  // Anchor SLAs on order_date (business order time)
+  const order_date = created_date;
 
-    for (let i = 1; i <= dailyOrders; i++) {
-      const orderType = faker.helpers.arrayElement(Object.keys(SLA_CONFIG));
-      const orderId = `ORD-${d}-${i}`;
-      const orderDate = randomDateInLast6Months();
-      const SLA = SLA_CONFIG[orderType];
+  // Fetch SLA targets for this order at creation time
+  const sla = await getSla(orderType, order_date);
+  const pickTarget = Number(sla.pick_sla_minutes || 20);
+  const stageTarget = Number(sla.stage_sla_minutes || 20);
+  const stageCompleteTarget = Number(sla.stage_complete_sla_minutes || 20);
+  const packTarget = Number(sla.pack_sla_minutes || 10);
+  const shipTarget = Number(sla.ship_sla_minutes || 60);
 
-      // Timestamp chain
-      const pickStart = orderDate.add(faker.number.int({ min: 1, max: 10 }), "minute");
-      const pickEnd = pickStart.add(faker.number.int({ min: SLA.pick - 4, max: SLA.pick + 8 }), "minute");
+  // Insert Order
+  await client.query(
+    `INSERT INTO orders(order_id, created_date, customer_id, order_type, order_type_id, branch, priority, total_lines, current_status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [
+      orderId,
+      created_date,
+      faker.number.int({ min: 1000, max: 9999 }),
+      orderType,
+      orderTypeId,
+      faker.location.city(),
+      faker.number.int({ min: 1, max: 5 }),
+      faker.number.int({ min: 1, max: 5 }),
+      "Created",
+    ]
+  );
 
-      const stageStart = pickEnd.add(faker.number.int({ min: 1, max: 5 }), "minute");
-      const stageEnd = stageStart.add(faker.number.int({ min: SLA.stage - 4, max: SLA.stage + 8 }), "minute");
+  const lineCount = faker.number.int({ min: 1, max: 5 });
 
-      const packStart = stageEnd.add(faker.number.int({ min: 1, max: 4 }), "minute");
-      const packEnd = packStart.add(faker.number.int({ min: SLA.pack - 3, max: SLA.pack + 5 }), "minute");
+  for (let ln = 0; ln < lineCount; ln++) {
+    const id = faker.number.int({ min: 100000, max: 999999 });
 
-      const shipDate = packEnd.add(faker.number.int({ min: 5, max: 20 }), "minute");
-
-      const branch = faker.helpers.arrayElement(["350", "420", "550", "600"]);
-
-      // ======================
-      // ORDERS TABLE
-      // ======================
-      rowsOrders.push([
-        orderId,
-        faker.number.int({ min: 1000, max: 9000 }).toString(),
-        orderType,
-        branch,
-        5,
-        1,
-        orderDate.toISOString(),
-        shipDate.subtract(SLA.ship, "minute").toISOString(),
-        shipDate.toISOString(),
-        "Shipped",
-      ]);
-
-      // ======================
-      // ORDER_LINES TABLE
-      // ======================
-      rowsLines.push([
-        orderId,
-        orderType,
-        branch,
-        "Ship",
-        orderDate.toISOString(),
-        pickStart.toISOString(),
-        pickEnd.toISOString(),
-        stageStart.toISOString(),
-        stageEnd.toISOString(),
-        packStart.toISOString(),
-        packEnd.toISOString(),
-        shipDate.toISOString(),
-        shipDate.toISOString(),
-        SLA.pick,
-        SLA.stage,
-        SLA.stageCmp,
-        SLA.pack,
-        SLA.ship,
-      ]);
-
-      // ======================
-      // STATUS HISTORY (5 rows per order)
-      // ======================
-      const statusHistory = [
-        ["Pending", orderDate, pickStart],
-        ["Picking", pickStart, pickEnd],
-        ["Staging", stageStart, stageEnd],
-        ["Packing", packStart, packEnd],
-        ["Shipped", shipDate, null],
-      ];
-
-      for (const [status, start, end] of statusHistory) {
-        rowsHistory.push([
-          orderId,
-          status,
-          start.toISOString(),
-          end ? end.toISOString() : null,
-          end ? end.diff(start, "second") : null,
-          0,
-          true,
-          faker.number.int({ min: 100, max: 999 }).toString(),
-        ]);
-      }
+    // Decide breaches and SLA Met status
+    let breachPick, breachStage, breachStageComplete, breachPack, breachShip;
+    
+    if (ensureSLAMet) {
+      // All stages meet SLA (green) - duration <= 25% of target
+      breachPick = false;
+      breachStage = false;
+      breachStageComplete = false;
+      breachPack = false;
+      breachShip = false;
+    } else {
+      // Decide breaches (explicit flags override randomness)
+      breachPick = ensureBreachPick || (!ensureBreachStage && faker.datatype.boolean());
+      breachStage = ensureBreachStage || (!ensureBreachPick && faker.datatype.boolean());
+      breachStageComplete = faker.datatype.boolean();
+      breachPack = faker.datatype.boolean();
+      breachShip = faker.datatype.boolean();
     }
-  }
 
-  console.log("Data generation finished. Inserting in batches...");
-
-  // =============================================
-  // BATCH INSERTS (50–200 rows per batch)
-  // =============================================
-  await client.query("BEGIN");
-
-  // Insert orders
-  const orderBatches = chunk(rowsOrders, 200);
-  for (const batch of orderBatches) {
-    const values = batch.map(
-      r => `('${r[0]}','${r[1]}','${r[2]}','${r[3]}',${r[4]},${r[5]},'${r[6]}','${r[7]}','${r[8]}','${r[9]}')`
-    ).join(",");
-    await client.query(
-      `INSERT INTO orders 
-       (order_id, customer_id, order_type, branch, priority, total_lines, created_at, target_ship_time, actual_ship_time, current_status)
-       VALUES ${values}`
+    // Construct a realistic timeline in minutes around SLA targets
+    const pick_start = addMinutes(order_date, 5);
+    const pick_complete = addMinutes(
+      pick_start,
+      ensureSLAMet 
+        ? Math.floor(pickTarget * 0.15) // 15% of target = SLA Met (green)
+        : pickTarget + (breachPick ? faker.number.int({ min: 10, max: 25 }) : -faker.number.int({ min: 3, max: 5 }))
     );
-  }
 
-  // Insert order_lines
-  const lineBatches = chunk(rowsLines, 200);
-  for (const batch of lineBatches) {
-    const values = batch.map(
-      r => `('${r[0]}','${r[1]}','${r[2]}','${r[3]}','${r[4]}','${r[5]}','${r[6]}','${r[7]}','${r[8]}','${r[9]}','${r[10]}','${r[11]}','${r[12]}',${r[13]},${r[14]},${r[15]},${r[16]},${r[17]})`
-    ).join(",");
+    const stage_start = addMinutes(pick_complete, 3);
+    const stage_complete = addMinutes(
+      stage_start,
+      ensureSLAMet
+        ? Math.floor(stageTarget * 0.15) // 15% of target = SLA Met (green)
+        : stageTarget + (breachStage ? faker.number.int({ min: 10, max: 25 }) : -faker.number.int({ min: 3, max: 5 }))
+    );
+
+    // Keep stage_complete at least as long as its static target
+    const stage_complete_clamped = ensureSLAMet 
+      ? addMinutes(stage_start, Math.floor(stageCompleteTarget * 0.15))
+      : new Date(Math.max(stage_complete.getTime(), addMinutes(stage_start, Math.max(stageCompleteTarget - 5, 1)).getTime()));
+
+    const pack_start = addMinutes(stage_complete_clamped, 2);
+    const pack_complete = addMinutes(
+      pack_start, 
+      ensureSLAMet 
+        ? Math.floor(packTarget * 0.15) // 15% of target = SLA Met (green)
+        : (breachPack ? packTarget + faker.number.int({ min: 5, max: 15 }) : Math.floor(packTarget * 0.8))
+    );
+    
+    const ship_date = addMinutes(pack_complete, 10);
+    const invoice_date = addMinutes(ship_date, 5);
+
+    const event_date = ship_date;
+
     await client.query(
       `INSERT INTO order_lines
-       (order_number, order_type, location, status, order_dt, pick_strt_dt, pick_cmp_dt, stage_strt_dt, stage_cmp_dt, pack_strt_dt, pack_cmp_dt, ship_dt, invoice_dt,
-        pick_sla_minutes, stage_sla_minutes, stage_cmp_sla_minutes, pack_sla_minutes, ship_sla_minutes)
-       VALUES ${values}`
+      (id, event_date, order_id, order_number, order_type, order_type_id, location,
+          order_date, pick_start_date, pick_complete_date,
+          stage_start_date, stage_complete_date,
+          pack_start_date, pack_complete_date,
+          ship_date, invoice_date, status)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+      [
+        id,
+        event_date,
+        orderId,
+        `ORD-${orderId}-${ln + 1}`,
+        orderType,
+        orderTypeId,
+        faker.location.buildingNumber(),
+        order_date,
+        pick_start,
+        pick_complete,
+        stage_start,
+        stage_complete_clamped,
+        pack_start,
+        pack_complete,
+        ship_date,
+        invoice_date,
+        "Completed",
+      ]
     );
-  }
 
-  // Insert status history
-  const historyBatches = chunk(rowsHistory, 200);
-  for (const batch of historyBatches) {
-    const values = batch.map(
-      r => `('${r[0]}','${r[1]}','${r[2]}',${r[3] ? `'${r[3]}'` : null},${r[4]},${r[5]},${r[6]},'${r[7]}')`
-    ).join(",");
+    // Insert status history records for each stage
+    let historyId = faker.number.int({ min: 1000000, max: 9999999 });
+
+    // Pick stage
+    const pickElapsed = (pick_complete - pick_start) / 1000;
+    const pickMet = pickElapsed / 60 <= pickTarget;
     await client.query(
       `INSERT INTO order_status_history 
-       (order_id, status, entered_at, completed_at, duration_seconds, sla_target_minutes, sla_met, worker_id)
-       VALUES ${values}`
+      (id, entered_date, order_id, order_line_id, order_type_id, status, completed_date, duration_seconds, sla_target_minutes, sla_met)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [historyId++, pick_complete, orderId, id, orderTypeId, 'picked', pick_complete, Math.floor(pickElapsed), pickTarget, pickMet]
+    );
+
+    // Stage stage
+    const stageElapsed = (stage_complete_clamped - order_date) / 1000;
+    const stageMet = stageElapsed / 60 <= stageTarget;
+    await client.query(
+      `INSERT INTO order_status_history 
+      (id, entered_date, order_id, order_line_id, order_type_id, status, completed_date, duration_seconds, sla_target_minutes, sla_met)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [historyId++, stage_complete_clamped, orderId, id, orderTypeId, 'staged', stage_complete_clamped, Math.floor(stageElapsed), stageTarget, stageMet]
+    );
+
+    // Stage Complete stage
+    const stageCompleteElapsed = (stage_complete_clamped - stage_start) / 1000;
+    const stageCompleteMet = stageCompleteElapsed / 60 <= stageCompleteTarget;
+    await client.query(
+      `INSERT INTO order_status_history 
+      (id, entered_date, order_id, order_line_id, order_type_id, status, completed_date, duration_seconds, sla_target_minutes, sla_met)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [historyId++, stage_complete_clamped, orderId, id, orderTypeId, 'stage_complete', stage_complete_clamped, Math.floor(stageCompleteElapsed), stageCompleteTarget, stageCompleteMet]
+    );
+
+    // Pack stage
+    const packElapsed = (pack_complete - pack_start) / 1000;
+    const packMet = packElapsed / 60 <= packTarget;
+    await client.query(
+      `INSERT INTO order_status_history 
+      (id, entered_date, order_id, order_line_id, order_type_id, status, completed_date, duration_seconds, sla_target_minutes, sla_met)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [historyId++, pack_complete, orderId, id, orderTypeId, 'packed', pack_complete, Math.floor(packElapsed), packTarget, packMet]
+    );
+
+    // Ship stage
+    const shipElapsed = (ship_date - order_date) / 1000;
+    const shipMet = shipElapsed / 60 <= shipTarget;
+    await client.query(
+      `INSERT INTO order_status_history 
+      (id, entered_date, order_id, order_line_id, order_type_id, status, completed_date, duration_seconds, sla_target_minutes, sla_met)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [historyId++, ship_date, orderId, id, orderTypeId, 'shipped', ship_date, Math.floor(shipElapsed), shipTarget, shipMet]
     );
   }
 
-  await client.query("COMMIT");
-
-  console.log("✔ FAST BATCH INSERT COMPLETED");
-  await client.end();
+  console.log(`✅ Inserted order ${orderId} (${orderType}) at ${new Date().toLocaleTimeString()}${ensureSLAMet ? " [✅ SLA MET]" : ensureBreachPick || ensureBreachStage ? " [🔴 BREACH]" : " [🟡 MIXED]"}`);
 }
 
-seed().catch(console.error);
+async function startSeeding() {
+  await client.connect();
+  console.log("✅ Connected to TimescaleDB");
+
+  const intervalSec = Number(process.env.SEED_INTERVAL_SEC || 120);
+  const batchSize = Number(process.env.SEED_BATCH || 3);
+
+  // Warm-up batch: Mix of SLA Met (green), Moving Slow (yellow), and Delayed (red)
+  console.log("🌱 Creating initial seed data with mixed SLA statuses...");
+  
+  // Create 3 SLA Met orders (green) - these will show up immediately
+  for (let i = 0; i < 3; i++) {
+    await insertRandomOrder({ ensureSLAMet: true });
+  }
+  
+  // Create 2 Moving Slow orders (yellow)
+  for (let i = 0; i < 2; i++) {
+    await insertRandomOrder({ ensureBreachPick: false, ensureBreachStage: false });
+  }
+  
+  // Create 2 Delayed orders (red)
+  await insertRandomOrder({ ensureBreachPick: true, ensureBreachStage: false });
+  await insertRandomOrder({ ensureBreachPick: false, ensureBreachStage: true });
+
+  console.log("✅ Initial seed complete! Dashboard should now show all 3 colors.");
+
+  setInterval(async () => {
+    for (let i = 0; i < batchSize; i++) {
+      // 40% SLA Met (green), 30% Moving Slow (yellow), 30% Delayed (red)
+      const rand = Math.random();
+      if (rand < 0.4) {
+        // SLA Met (green)
+        await insertRandomOrder({ ensureSLAMet: true });
+      } else if (rand < 0.7) {
+        // Moving Slow (yellow)
+        await insertRandomOrder({ ensureBreachPick: false, ensureBreachStage: false });
+      } else {
+        // Delayed (red)
+        const breach = faker.datatype.boolean();
+        await insertRandomOrder({ ensureBreachPick: breach, ensureBreachStage: !breach });
+      }
+    }
+  }, intervalSec * 1000);
+}
+
+startSeeding().catch((err) => console.error(err));
