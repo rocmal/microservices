@@ -1,0 +1,11 @@
+fieldName,fieldType,doc,default
+branch,"""int""",,
+order_number,"""long""",,
+order_date,"""string""",,
+event_code,"""string""",,
+event_date,"""string""",,
+event_time,"""string""",,
+event_ts,"""string""",,
+source_system,"""string""",,
+created_at,"""string""",,
+updated_at,"""string""",,

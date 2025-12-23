@@ -1,0 +1,12 @@
+SHIP_METH,SERVICE,CARRIER
+D5S       ,FEDEX HOME DELIVERY                               ,FEDEX                         
+FDG       ,FEDEX HOME DELIVERY                               ,FEDEX                         
+FDH       ,FEDEX HOME DELIVERY                               ,FEDEX                         
+FDO       ,FEDEX STANDARD OVERNIGHT                          ,FEDEX                         
+FDX       ,FEDEX HOME DELIVERY                               ,FEDEX                         
+FPO       ,FEDEX PRIORITY OVERNIGHT                          ,FEDEX                         
+UGA       ,GROUND ADVANTAGE                                  ,USPS                          
+UPS       ,UPS GROUND                                        ,UPS                           
+UP1       ,UPS NEXT DAY AIR                                  ,UPS                           
+USP       ,PRIORITY MAIL                                     ,USPS                          
+US1       ,FIRST-CLASS MAIL                                  ,USPS                          

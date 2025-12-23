@@ -1,0 +1,4 @@
+fieldName,fieldType,doc,default
+branch,"""int""",,
+order_number,"""long""",,
+event_code,"""string""",,

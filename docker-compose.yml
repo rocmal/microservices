@@ -2,37 +2,102 @@ version: '3.8'
 
 services:
   # ---------------------------
-  # ✅ Kafka (KRaft mode)
+  # ✅ Kafka Cluster (3 brokers - KRaft mode)
   # ---------------------------
-  kafka:
+  kafka1:
     image: apache/kafka:latest
-    container_name: kafka
+    container_name: kafka1
     ports:
-      - "9092:9092"     # internal access (containers)
-      - "29092:29092"   # external access (host apps)
-      - "9999:9999"     # JMX port
+      - "9092:9092"
+      - "32090:32090"   # external access
+      - "9991:9991"     # JMX port
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: "broker,controller"
-
-      # Listeners for internal + external
-      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:32090,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka1:9092,EXTERNAL://localhost:32090"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
-
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
-
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
       KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_JMX_PORT: 9991
+      KAFKA_JMX_HOSTNAME: kafka1
+      KAFKA_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9991 -Dcom.sun.management.jmxremote.rmi.port=9991 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+    networks:
+      - monitoring
 
-      # JMX
-      KAFKA_JMX_PORT: 9999
-      KAFKA_JMX_HOSTNAME: kafka
-      KAFKA_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+  kafka2:
+    image: apache/kafka:latest
+    container_name: kafka2
+    ports:
+      - "9093:9092"
+      - "32091:32091"   # external access
+      - "9992:9992"     # JMX port
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:32091,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka2:9092,EXTERNAL://localhost:32091"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_JMX_PORT: 9992
+      KAFKA_JMX_HOSTNAME: kafka2
+      KAFKA_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9992 -Dcom.sun.management.jmxremote.rmi.port=9992 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+    networks:
+      - monitoring
+
+  kafka3:
+    image: apache/kafka:latest
+    container_name: kafka3
+    ports:
+      - "9094:9092"
+      - "32092:32092"   # external access
+      - "9993:9993"     # JMX port
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:32092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka3:9092,EXTERNAL://localhost:32092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_JMX_PORT: 9993
+      KAFKA_JMX_HOSTNAME: kafka3
+      KAFKA_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9993 -Dcom.sun.management.jmxremote.rmi.port=9993 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+    networks:
+      - monitoring
+
+  # ---------------------------
+  # ✅ Confluent Schema Registry
+  # ---------------------------
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.5.0
+    container_name: schema-registry
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "kafka1:9092,kafka2:9092,kafka3:9092"
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
     networks:
       - monitoring
 
@@ -40,11 +105,15 @@ services:
     image: confluentinc/cp-kafka-connect:7.5.0
     container_name: kafka-connect
     depends_on:
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
+      - schema-registry
+      - timescaledb
     ports:
       - "8083:8083"
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: "kafka:9092"
+      CONNECT_BOOTSTRAP_SERVERS: "kafka1:9092,kafka2:9092,kafka3:9092"
       CONNECT_REST_PORT: 8083
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect 
       CONNECT_GROUP_ID: "connect-cluster"
@@ -52,16 +121,22 @@ services:
       CONNECT_OFFSET_STORAGE_TOPIC: "connect-offsets"
       CONNECT_STATUS_STORAGE_TOPIC: "connect-status"
 
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
 
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
 
-      CONNECT_PLUGIN_PATH: "/usr/share/java"
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+    command:
+      - bash
+      - -c
+      - |
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.4
+        /etc/confluent/docker/run
     networks:
       - monitoring
 
@@ -71,10 +146,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_NAME: local-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9092,kafka3:9092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://192.168.31.237:8081
     depends_on:
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
+      - schema-registry
     networks:
       - monitoring
 
@@ -105,7 +184,9 @@ services:
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
       - timescaledb
     networks:
       - monitoring
@@ -125,7 +206,9 @@ services:
       - "5556"
       - "/opt/bitnami/jmx-exporter/config.yml"
     depends_on:
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
     networks:
       - monitoring
     restart: unless-stopped
@@ -139,10 +222,14 @@ services:
     ports:
       - "9308:9308"
     command:
-      - '--kafka.server=kafka:9092'
+      - '--kafka.server=kafka1:9092'
+      - '--kafka.server=kafka2:9092'
+      - '--kafka.server=kafka3:9092'
       - '--web.listen-address=:9308'
     depends_on:
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
     networks:
       - monitoring
     restart: unless-stopped

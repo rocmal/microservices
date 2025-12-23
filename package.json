@@ -20,6 +20,7 @@
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
     "@kafkajs/confluent-schema-registry": "^3.9.0",
+    "axios": "^1.13.2",
     "dayjs": "^1.11.19",
     "faker": "^6.6.6",
     "kafka-streams": "^5.0.0",
