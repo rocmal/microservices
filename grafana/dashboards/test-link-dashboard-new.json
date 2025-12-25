@@ -16,288 +16,1096 @@
     ]
   },
   "editable": true,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": 0,
   "links": [],
   "panels": [
-
     {
-      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
+      "panels": [],
       "title": "PICK SLA BREACH",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+      "type": "row"
     },
-
     {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
       "id": 2,
-      "type": "barchart",
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  bucket AS time,\r\n  sla_status AS metric,\r\n  order_count AS value\r\nFROM sla_pick_status_5min_mv\r\nWHERE sla_status IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\n  AND $__timeFilter(bucket)\r\nORDER BY bucket;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
       "title": "Pick SLA Breach Trend (5-Min)",
+      "type": "barchart"
+    },
+    {
       "datasource": "${ds}",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
       "fieldConfig": {
-        "defaults": { "color": { "mode": "fixed" } },
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Delayed" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
-          { "matcher": { "id": "byName", "options": "Moving Slow" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red"
+                      },
+                      "Moving Slow": {
+                        "color": "yellow"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
         ]
       },
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "time_series",
-          "rawSql": "SELECT bucket AS time, sla_status AS metric, order_count AS value FROM sla_pick_status_5min_mv WHERE sla_status IN ('Delayed','Moving Slow') AND breach_scope='${breach_scope}' AND order_type ~ '${order_type}' AND $__timeFilter(bucket)",
-          "refId": "A"
-        }
-      ]
-    },
-
-    {
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
       "id": 3,
-      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  order_type,\r\n  pick_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE pick_breach_state IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, pick_breach_state;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
       "title": "Pick SLA – Order Details",
-      "datasource": "${ds}",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
-      "fieldConfig": {
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "status" },
-            "properties": [
-              { "id": "custom.cellOptions", "value": { "applyToRow": true, "type": "color-background" } },
-              {
-                "id": "mappings",
-                "value": [
-                  { "type": "value", "options": { "Delayed": { "color": "red" }, "Moving Slow": { "color": "yellow" } } }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "table",
-          "rawSql": "SELECT order_type, pick_breach_state AS status, COUNT(*) AS count FROM order_sla_breach_reporting WHERE pick_breach_state IN ('Delayed','Moving Slow') AND breach_scope='${breach_scope}' AND order_type ~ '${order_type}' GROUP BY order_type, pick_breach_state",
-          "refId": "A"
-        }
-      ]
+      "type": "table"
     },
-
     {
-      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
       "id": 4,
+      "panels": [],
       "title": "STAGE STARTED SLA BREACH (PCK → OSC)",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 }
+      "type": "row"
     },
-
     {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
       "id": 5,
-      "type": "barchart",
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  bucket AS time,\r\n  sla_status AS metric,\r\n  order_count AS value\r\nFROM sla_stage_started_status_5min_mv\r\nWHERE sla_status IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\n  AND $__timeFilter(bucket)\r\nORDER BY bucket;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
       "title": "Stage Started SLA Breach Trend (5-Min)",
+      "type": "barchart"
+    },
+    {
       "datasource": "${ds}",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
       "fieldConfig": {
-        "defaults": { "color": { "mode": "fixed" } },
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Delayed" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Moving Slow" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red"
+                      },
+                      "Moving Slow": {
+                        "color": "yellow"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
         ]
       },
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "time_series",
-          "rawSql": "SELECT bucket AS time, sla_status AS metric, order_count AS value FROM sla_stage_started_status_5min_mv WHERE sla_status IN ('Delayed','Moving Slow') AND breach_scope='${breach_scope}' AND order_type ~ '${order_type}' AND $__timeFilter(bucket)",
-          "refId": "A"
-        }
-      ]
-    },
-
-    {
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
       "id": 6,
-      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  order_type,\r\n  stage_started_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE stage_started_breach_state IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, stage_started_breach_state;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
       "title": "Stage Started SLA – Order Details",
-      "datasource": "${ds}",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
-      "fieldConfig": {
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "status" },
-            "properties": [
-              { "id": "custom.cellOptions", "value": { "applyToRow": true, "type": "color-background" } },
-              {
-                "id": "mappings",
-                "value": [
-                  { "type": "value", "options": { "Delayed": { "color": "red" }, "Moving Slow": { "color": "yellow" } } }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "table",
-          "rawSql": "SELECT order_type, stage_started_breach_state AS status, COUNT(*) AS count FROM order_sla_breach_reporting WHERE stage_started_breach_state IN ('Delayed','Moving Slow') AND breach_scope='${breach_scope}' AND order_type ~ '${order_type}' GROUP BY order_type, stage_started_breach_state",
-          "refId": "A"
-        }
-      ]
+      "type": "table"
     },
-
     {
-      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
       "id": 7,
+      "panels": [],
       "title": "STAGE COMPLETED SLA BREACH (OSC → SPK)",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 }
+      "type": "row"
     },
-
     {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
       "id": 8,
-      "type": "barchart",
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  bucket AS time,\r\n  sla_status AS metric,\r\n  order_count AS value\r\nFROM sla_stage_status_5min_mv\r\nWHERE sla_status IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\n  AND $__timeFilter(bucket)\r\nORDER BY bucket;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
       "title": "Stage Completed SLA Breach Trend (5-Min)",
+      "type": "barchart"
+    },
+    {
       "datasource": "${ds}",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
       "fieldConfig": {
-        "defaults": { "color": { "mode": "fixed" } },
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Delayed" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Moving Slow" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red"
+                      },
+                      "Moving Slow": {
+                        "color": "yellow"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
         ]
       },
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "time_series",
-          "rawSql": "SELECT bucket AS time, sla_status AS metric, order_count AS value FROM sla_stage_status_5min_mv WHERE sla_status IN ('Delayed','Moving Slow') AND breach_scope='${breach_scope}' AND order_type ~ '${order_type}' AND $__timeFilter(bucket)",
-          "refId": "A"
-        }
-      ]
-    },
-
-    {
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
       "id": 9,
-      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  order_type,\r\n  stage_complete_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE stage_complete_breach_state IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, stage_complete_breach_state;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
       "title": "Stage Completed SLA – Order Details",
-      "datasource": "${ds}",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
-      "fieldConfig": {
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "status" },
-            "properties": [
-              { "id": "custom.cellOptions", "value": { "applyToRow": true, "type": "color-background" } },
-              {
-                "id": "mappings",
-                "value": [
-                  { "type": "value", "options": { "Delayed": { "color": "red" }, "Moving Slow": { "color": "yellow" } } }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "table",
-          "rawSql": "SELECT order_type, stage_complete_breach_state AS status, COUNT(*) AS count FROM order_sla_breach_reporting WHERE stage_complete_breach_state IN ('Delayed','Moving Slow') AND breach_scope='${breach_scope}' AND order_type ~ '${order_type}' GROUP BY order_type, stage_complete_breach_state",
-          "refId": "A"
-        }
-      ]
+      "type": "table"
     },
-
     {
-      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
       "id": 10,
+      "panels": [],
       "title": "SHIP SLA BREACH",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 }
+      "type": "row"
     },
-
     {
-      "id": 11,
-      "type": "barchart",
-      "title": "Ship SLA Breach Trend (5-Min)",
       "datasource": "${ds}",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
       "fieldConfig": {
-        "defaults": { "color": { "mode": "fixed" } },
-        "overrides": [
-          { "matcher": { "id": "byName", "options": "Delayed" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Moving Slow" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] }
-        ]
-      },
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "time_series",
-          "rawSql": "SELECT bucket AS time, sla_status AS metric, order_count AS value FROM sla_ship_status_5min_mv WHERE sla_status IN ('Delayed','Moving Slow') AND breach_scope='${breach_scope}' AND order_type ~ '${order_type}' AND $__timeFilter(bucket)",
-          "refId": "A"
-        }
-      ]
-    },
-
-    {
-      "id": 12,
-      "type": "table",
-      "title": "Ship SLA – Order Details",
-      "datasource": "${ds}",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
-      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "status" },
+            "matcher": {
+              "id": "byName",
+              "options": "Delayed"
+            },
             "properties": [
-              { "id": "custom.cellOptions", "value": { "applyToRow": true, "type": "color-background" } },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moving Slow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "id": 11,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  bucket AS time,\r\n  sla_status AS metric,\r\n  order_count AS value\r\nFROM sla_ship_status_5min_mv\r\nWHERE sla_status IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\n  AND $__timeFilter(bucket)\r\nORDER BY bucket;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Ship SLA Breach Trend (5-Min)",
+      "type": "barchart"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
               {
                 "id": "mappings",
                 "value": [
-                  { "type": "value", "options": { "Delayed": { "color": "red" }, "Moving Slow": { "color": "yellow" } } }
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red"
+                      },
+                      "Moving Slow": {
+                        "color": "yellow"
+                      }
+                    },
+                    "type": "value"
+                  }
                 ]
               }
             ]
           }
         ]
       },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
-          "rawQuery": true,
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT order_type, ship_breach_state AS status, COUNT(*) AS count FROM order_sla_breach_reporting WHERE ship_breach_state IN ('Delayed','Moving Slow') AND breach_scope='${breach_scope}' AND order_type ~ '${order_type}' GROUP BY order_type, ship_breach_state",
-          "refId": "A"
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  order_type,\r\n  ship_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE ship_breach_state IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, ship_breach_state;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
         }
-      ]
+      ],
+      "title": "Ship SLA – Order Details",
+      "type": "table"
     }
   ],
+  "preload": false,
   "refresh": "5m",
   "schemaVersion": 42,
+  "tags": [],
   "templating": {
     "list": [
       {
+        "current": {
+          "text": "TimescaleDB",
+          "value": "P40AE60E18F02DE32"
+        },
         "name": "ds",
-        "type": "datasource",
+        "options": [],
         "query": "postgres",
-        "current": { "text": "TimescaleDB", "value": "P40AE60E18F02DE32" }
+        "refresh": 1,
+        "type": "datasource"
       },
       {
-        "name": "order_type",
-        "type": "query",
+        "allValue": ".*",
+        "current": {
+          "text": [
+            "RockAuto"
+          ],
+          "value": [
+            "RockAuto"
+          ]
+        },
         "datasource": "${ds}",
         "includeAll": true,
-        "allValue": ".*",
-        "query": "SELECT DISTINCT order_type FROM order_sla_breach_reporting ORDER BY 1"
+        "multi": true,
+        "name": "order_type",
+        "options": [
+          {
+            "selected": false,
+            "text": "Ecommerce",
+            "value": "Ecommerce"
+          },
+          {
+            "selected": true,
+            "text": "RockAuto",
+            "value": "RockAuto"
+          }
+        ],
+        "query": "SELECT DISTINCT order_type FROM order_sla_breach_reporting ORDER BY 1",
+        "type": "query"
       },
       {
+        "current": {
+          "text": "HISTORICAL",
+          "value": "HISTORICAL"
+        },
         "name": "breach_scope",
-        "type": "custom",
+        "options": [
+          {
+            "selected": false,
+            "text": "REALTIME",
+            "value": "REALTIME"
+          },
+          {
+            "selected": true,
+            "text": "HISTORICAL",
+            "value": "HISTORICAL"
+          }
+        ],
         "query": "REALTIME,HISTORICAL",
-        "current": { "text": "HISTORICAL", "value": "HISTORICAL" }
+        "type": "custom"
       }
     ]
   },
-  "time": { "from": "now-30d", "to": "now" },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
   "timezone": "",
   "title": "SLA Breach Monitoring (Pick / Stage Started / Stage Completed / Ship)",
-  "uid": "SLA_BREACH_VALUE_MAPPING_FINAL",
-  "version": 6
+  "uid": "SLA_BREACH_VALUE_MAPPING_FINAL_NEW",
+  "version": 11
 }
