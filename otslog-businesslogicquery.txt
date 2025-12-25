@@ -1,0 +1,149 @@
+SELECT
+   oh.order as order_number,
+   --OL.LLINE as line_number,
+
+
+   Max(Case
+       when MOD(oh.Cusno, 10000000000) = 64356 then 'RockAuto'
+       When r.rte_type = 'C' Then 'Store Fullfilment'
+       When r.rte_type is null Then 'Ecommerce'
+       WHEN r.rte_type = 'H' Then 'HotShot'
+       WHEN r.rte_type = 'T' Then 'Transfer'
+       WHEN r.rte_type = 'R' Then 'Route'
+       else 'Regular Order' end) AS order_type,
+  oh.brnch as location,
+   Max(Case
+       when Svc.oltdat is not null THEN 'Ship' -- Ship Verified
+       When spk.oltdat is not null THEN 'StageC' --PackS' -- Stage order Picking completed
+       When osc.oltdat is not null THEN 'StageS' -- or StageS  stage started
+       When pck.oltdat is not null THEN  'PickC' --''StageS' -- PickC
+       When rls.oltdat is not null THEN 'PickS' -- RLS
+       When ol.boqty > 0 THEN 'BO'
+       else ' ' end) AS status,
+
+
+   -- Timestamps for each stage
+MAX(VARCHAR_FORMAT(TIMESTAMP(crt.oltdat, crt.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS order_dt,
+MAX(VARCHAR_FORMAT(TIMESTAMP(rls.oltdat, rls.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS pick_strt_dt,
+MAX(VARCHAR_FORMAT(TIMESTAMP(pck.oltdat, pck.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS pick_cmp_dt,
+MAX(VARCHAR_FORMAT(TIMESTAMP(osc.oltdat, osc.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS stage_strt_dt,
+MAX(VARCHAR_FORMAT(TIMESTAMP(spk.oltdat, spk.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS stage_cmp_dt,
+MAX(VARCHAR_FORMAT(TIMESTAMP(spk.oltdat, spk.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS pack_strt_dt,
+MAX(VARCHAR_FORMAT(TIMESTAMP(spk.oltdat, spk.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS pack_cmp_dt,
+MAX(VARCHAR_FORMAT(TIMESTAMP(svc.oltdat, svc.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS ship_dt,
+MAX(VARCHAR_FORMAT(TIMESTAMP(svc.oltdat, svc.olttim), 'YYYY-MM-DD HH24:MI:SS')) AS invoice_dt,
+
+
+ -- SLA Columns
+   Max(Case
+       when MOD(oh.Cusno, 10000000000) = 64356 then 60    -- RockAuto
+       When r.rte_type = 'C' Then 15                       -- Store Fullfilment
+       When r.rte_type is null Then 120                    -- Ecommerce
+       WHEN r.rte_type = 'H' Then 20                       -- Hot Transfer
+       WHEN r.rte_type = 'T' Then 30
+       WHEN r.rte_type = 'R' Then  30
+       else 120 end) AS pick_sla,
+
+
+   Max(Case
+       when MOD(oh.Cusno, 10000000000) = 64356 then 60    -- RockAuto
+       When r.rte_type = 'C' Then 15                       -- Store Fullfilment
+       When r.rte_type is null Then 120                    -- Ecommerce
+       WHEN r.rte_type = 'H' Then 20                       -- Hot Transfer
+       WHEN r.rte_type = 'T' Then 30
+       WHEN r.rte_type = 'R' Then 30
+       else 120 end) AS stage_sla,
+Max(Case
+       when MOD(oh.Cusno, 10000000000) = 64356 then 60    -- RockAuto
+       When r.rte_type = 'C' Then 15                       -- Store Fullfilment
+       When r.rte_type is null Then 120                    -- Ecommerce
+       WHEN r.rte_type = 'H' Then 20                       -- Hot Transfer
+    WHEN r.rte_type = 'T' Then 30
+       WHEN r.rte_type = 'R' Then 30
+       else 120 end) AS stage_cmp_sla,
+
+
+   Max(Case
+       when MOD(oh.Cusno, 10000000000) = 64356 then 20    -- RockAuto
+       When r.rte_type = 'C' Then 10                       -- Store Fullfilment
+       When r.rte_type is null Then 40                     -- Ecommerce
+       WHEN r.rte_type = 'H' Then 10                       -- Hot Transfer
+       WHEN r.rte_type = 'T' Then 10
+       WHEN r.rte_type = 'R' Then 10
+       else 40 end) AS pack_sla,
+
+
+   Max(Case
+       when MOD(oh.Cusno, 10000000000) = 64356 then 120   -- RockAuto
+       When r.rte_type = 'C' Then 0                        -- Store Fullfilment
+       When r.rte_type is null Then 240                    -- Ecommerce
+       WHEN r.rte_type = 'H' Then 10                       -- Hot Transfer
+       WHEN r.rte_type = 'T' Then 10
+       WHEN r.rte_type = 'R' Then 10
+       else 240 end) AS ship_sla
+
+
+
+
+
+
+
+
+FROM DSTDATA.oeordh oh
+JOIN DSTDATA.oeordl ol
+   ON oh.brnch = ol.lbrnch
+   AND oh.order = ol.lorder
+   AND ol.rstat NOT IN (0, 9)
+JOIN DSTDATA.wmopckh ph
+   ON ph.oco = 1
+   AND ph.owhse = oh.brnch
+   AND ph.obr = oh.brnch
+   AND ph.ono = oh.order
+LEFT JOIN DSTDATA.otslog crt
+   ON crt.olbran = oh.brnch
+   AND crt.olord# = oh.order
+   AND crt.olodat = DATE(TIMESTAMP_FORMAT(DIGITS(oh.fdate), 'MMDDYYYY'))
+   AND crt.oltran IN ('CRT', 'Q2O')
+LEFT JOIN DSTDATA.otslog rls
+   ON rls.olbran = oh.brnch
+   AND rls.olord# = oh.order
+   AND rls.olodat = DATE(TIMESTAMP_FORMAT(DIGITS(oh.fdate), 'MMDDYYYY'))
+   AND rls.oltran = 'RLS'
+LEFT JOIN DSTDATA.otslog pck
+   ON pck.olbran = oh.brnch
+   AND pck.olord# = oh.order
+   AND pck.olodat = DATE(TIMESTAMP_FORMAT(DIGITS(oh.fdate), 'MMDDYYYY'))
+   AND pck.oltran = 'PCK'
+LEFT JOIN DSTDATA.otslog osc
+   ON osc.olbran = oh.brnch
+   AND osc.olord# = oh.order
+   AND osc.olodat = DATE(TIMESTAMP_FORMAT(DIGITS(oh.fdate), 'MMDDYYYY'))
+   AND osc.oltran = 'OSC'
+LEFT JOIN DSTDATA.otslog spk
+   ON spk.olbran = oh.brnch
+   AND spk.olord# = oh.order
+   AND spk.olodat = DATE(TIMESTAMP_FORMAT(DIGITS(oh.fdate), 'MMDDYYYY'))
+   AND spk.oltran = 'SPK'
+LEFT JOIN DSTDATA.otslog svc
+   ON svc.olbran = oh.brnch
+   AND svc.olord# = oh.order
+   AND svc.olodat = DATE(TIMESTAMP_FORMAT(DIGITS(oh.fdate), 'MMDDYYYY'))
+   AND svc.oltran IN ('SVC', 'SHV')
+Left Join PAICUST.ship_code sc
+   on oh.dlvrcd = sc.ship_meth
+Left Join PAICUST.dl_rte r
+   on oh.brnch = r.branch and oh.dlvrcd = r.ship_meth
+
+
+WHERE
+  oh.brnch = 350
+  AND oh.otype = 3
+  AND oh.rstat NOT IN (0, 9)
+  AND ol.iexch NOT IN ('D', 'J')
+
+
+GROUP BY
+   oh.order,
+   --OL.LLINE,
+   oh.brnch
+

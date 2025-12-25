@@ -1,0 +1,128 @@
+{
+  "uid": "SLA_BREACH_MONITOR",
+  "title": "SLA Breach Monitor – Live Orders",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "tags": ["SLA", "Breach", "Operations"],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "ds",
+        "type": "datasource",
+        "label": "Datasource",
+        "query": "postgres",
+        "current": {}
+      },
+      {
+        "name": "order_type",
+        "label": "Order Type",
+        "type": "query",
+        "datasource": "${ds}",
+        "definition": "SELECT DISTINCT order_type FROM order_sla_evaluation ORDER BY 1",
+        "query": "SELECT DISTINCT order_type FROM order_sla_evaluation ORDER BY 1",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "🚨 Delayed Orders",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": "${ds}",
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) FROM (\nSELECT 1\nFROM order_sla_evaluation\nWHERE (\n  (pick_start_ts IS NOT NULL AND pick_complete_ts IS NULL AND EXTRACT(EPOCH FROM (NOW()-pick_start_ts))/60 > pick_sla_minutes)\n  OR\n  (stage_start_ts IS NOT NULL AND stage_complete_ts IS NULL AND EXTRACT(EPOCH FROM (NOW()-stage_start_ts))/60 > stage_complete_sla_minutes)\n  OR\n  (stage_complete_ts IS NOT NULL AND ship_ts IS NULL AND EXTRACT(EPOCH FROM (NOW()-stage_complete_ts))/60 > (pack_sla_minutes+ship_sla_minutes))\n)\nAND order_type ~ '${order_type:regex}'\n) x;"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "red", "value": 0 }]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "⚠️ Moving Slow (≥80%)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": "${ds}",
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) FROM (\nSELECT 1\nFROM order_sla_evaluation\nWHERE (\n  (pick_start_ts IS NOT NULL AND pick_complete_ts IS NULL AND EXTRACT(EPOCH FROM (NOW()-pick_start_ts))/60 BETWEEN pick_sla_minutes*0.8 AND pick_sla_minutes)\n  OR\n  (stage_start_ts IS NOT NULL AND stage_complete_ts IS NULL AND EXTRACT(EPOCH FROM (NOW()-stage_start_ts))/60 BETWEEN stage_complete_sla_minutes*0.8 AND stage_complete_sla_minutes)\n  OR\n  (stage_complete_ts IS NOT NULL AND ship_ts IS NULL AND EXTRACT(EPOCH FROM (NOW()-stage_complete_ts))/60 BETWEEN (pack_sla_minutes+ship_sla_minutes)*0.8 AND (pack_sla_minutes+ship_sla_minutes))\n)\nAND order_type ~ '${order_type:regex}'\n) x;"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "yellow" }
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "📋 SLA Breach – Live Orders (All Stages)",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 16 },
+      "datasource": "${ds}",
+      "options": {
+        "showHeader": true,
+        "enablePagination": true,
+        "cellHeight": "sm"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT\n  order_type AS \"Order Type\",\n  stage_name AS \"Stage\",\n  breach_status AS \"Status\",\n  order_id AS \"Order ID\",\n  elapsed_minutes AS \"Elapsed (min)\",\n  sla_minutes AS \"SLA (min)\",\n  (sla_minutes - elapsed_minutes) AS \"Time Remaining\",\n  ROUND((elapsed_minutes::numeric/sla_minutes)*100,1) AS \"SLA Used %\"\nFROM (\n  SELECT\n    order_type, order_id,\n    'Pick' AS stage_name,\n    ROUND(EXTRACT(EPOCH FROM (NOW()-pick_start_ts))/60)::INT AS elapsed_minutes,\n    pick_sla_minutes AS sla_minutes,\n    CASE\n      WHEN EXTRACT(EPOCH FROM (NOW()-pick_start_ts))/60 > pick_sla_minutes THEN 'Delayed'\n      ELSE 'Moving Slow'\n    END AS breach_status\n  FROM order_sla_evaluation\n  WHERE pick_start_ts IS NOT NULL AND pick_complete_ts IS NULL\n\n  UNION ALL\n\n  SELECT\n    order_type, order_id,\n    'Stage',\n    ROUND(EXTRACT(EPOCH FROM (NOW()-stage_start_ts))/60)::INT,\n    stage_complete_sla_minutes,\n    CASE\n      WHEN EXTRACT(EPOCH FROM (NOW()-stage_start_ts))/60 > stage_complete_sla_minutes THEN 'Delayed'\n      ELSE 'Moving Slow'\n    END\n  FROM order_sla_evaluation\n  WHERE stage_start_ts IS NOT NULL AND stage_complete_ts IS NULL\n\n  UNION ALL\n\n  SELECT\n    order_type, order_id,\n    'Ship',\n    ROUND(EXTRACT(EPOCH FROM (NOW()-stage_complete_ts))/60)::INT,\n    (pack_sla_minutes+ship_sla_minutes),\n    CASE\n      WHEN EXTRACT(EPOCH FROM (NOW()-stage_complete_ts))/60 > (pack_sla_minutes+ship_sla_minutes) THEN 'Delayed'\n      ELSE 'Moving Slow'\n    END\n  FROM order_sla_evaluation\n  WHERE stage_complete_ts IS NOT NULL AND ship_ts IS NULL\n) x\nWHERE elapsed_minutes >= sla_minutes*0.8\nAND order_type ~ '${order_type:regex}'\nORDER BY\n  CASE breach_status WHEN 'Delayed' THEN 1 ELSE 2 END,\n  \"SLA Used %\" DESC;"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Status" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Delayed": { "color": "red" },
+                      "Moving Slow": { "color": "yellow" }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-background", "applyToRow": true }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

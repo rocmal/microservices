@@ -1,0 +1,39 @@
+select "brnch","ORDER","cusno","otype","rstat","fdate","dlvrcd" from raw_oeordh
+select "lbranch","lorder","lline","rstat","iexch","boqty" from raw_oeordl
+select "olbran","OLORD#","olodat","oltran","oltdat","olttim","oluser" from raw_otslog
+select "branch","dlvrcd","route_type" from ship_meth
+select * from sla_config
+
+-- Basic usage - get SLA minutes for a Hotspot order placed now
+SELECT * 
+FROM get_sla_for_order('Hotspot', NOW());
+
+-- Get SLA for a Hotspot order placed at a specific time
+SELECT * 
+FROM get_sla_for_order('Hotspot', '2025-12-23 10:30:00'::TIMESTAMPTZ);
+
+-- Get SLA for a Hotspot order placed before 1 PM cutoff (if time-based rules exist)
+SELECT * 
+FROM get_sla_for_order('Hotspot', '2025-12-23 12:30:00'::TIMESTAMPTZ);
+
+-- Get SLA for a Hotspot order placed after 1 PM cutoff
+SELECT * 
+FROM get_sla_for_order('Hotspot', '2025-12-23 14:30:00'::TIMESTAMPTZ);
+
+-- Get SLA with labeled columns
+SELECT 
+  pick_sla_minutes,
+  stage_sla_minutes,
+  stage_complete_sla_minutes,
+  pack_sla_minutes,
+  ship_sla_minutes
+FROM get_sla_for_order('Hotspot', NOW());
+
+-- Calculate actual deadline timestamps from current time
+SELECT 
+  NOW() as order_time,
+  NOW() + (pick_sla_minutes || ' minutes')::INTERVAL as pick_deadline,
+  NOW() + (stage_sla_minutes || ' minutes')::INTERVAL as stage_deadline,
+  NOW() + (pack_sla_minutes || ' minutes')::INTERVAL as pack_deadline,
+  NOW() + (ship_sla_minutes || ' minutes')::INTERVAL as ship_deadline
+FROM get_sla_for_order('Hotspot', NOW());

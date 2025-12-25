@@ -1,0 +1,94 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "${ds}",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 8,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "${ds}",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" } },
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT order_created_ts AS time, order_type, pick_sla_status, stage_sla_status, ship_sla_status FROM order_sla_evaluation WHERE order_type = '${order_type}' AND current_status = '${workflow_status}' AND order_created_ts >= $__timeFrom() AND order_created_ts < $__timeTo() ORDER BY order_created_ts",
+          "refId": "A"
+        }
+      ],
+      "title": "SLA Status Trend (Order Level)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } }, "overrides": [] },
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 10 },
+      "id": 2,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT order_id, order_type, current_status, pick_sla_status, stage_sla_status, ship_sla_status, pick_duration_minutes, stage_duration_minutes, pack_ship_duration_minutes, total_cycle_time_minutes, order_created_ts FROM order_sla_evaluation WHERE order_type = '${order_type}' AND current_status = '${workflow_status}' AND order_created_ts >= $__timeFrom() AND order_created_ts < $__timeTo() ORDER BY order_created_ts DESC LIMIT 500",
+          "refId": "A"
+        }
+      ],
+      "title": "Order-Level SLA Details",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": { "text": "All", "value": "$__all" },
+        "datasource": "${ds}",
+        "definition": "SELECT DISTINCT order_type FROM sla_dashboard_summary ORDER BY order_type;",
+        "includeAll": true,
+        "label": "Order Type",
+        "name": "order_type",
+        "options": [],
+        "query": "SELECT DISTINCT order_type FROM sla_dashboard_summary ORDER BY order_type;",
+        "type": "query"
+      },
+      {
+        "current": { "text": "PickS", "value": "PickS" },
+        "datasource": "${ds}",
+        "definition": "SELECT DISTINCT current_status FROM sla_dashboard_summary ORDER BY current_status;",
+        "includeAll": false,
+        "label": "Workflow Stage",
+        "name": "workflow_status",
+        "options": [],
+        "query": "SELECT DISTINCT current_status FROM sla_dashboard_summary ORDER BY current_status;",
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "America/New_York",
+  "title": "SLA Detail Viewer (New Schema)",
+  "uid": "DETAIL_SLA_NEW",
+  "version": 1
+}
