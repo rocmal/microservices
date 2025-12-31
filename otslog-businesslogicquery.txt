@@ -82,13 +82,6 @@ Max(Case
        WHEN r.rte_type = 'R' Then 10
        else 240 end) AS ship_sla
 
-
-
-
-
-
-
-
 FROM DSTDATA.oeordh oh
 JOIN DSTDATA.oeordl ol
    ON oh.brnch = ol.lbrnch

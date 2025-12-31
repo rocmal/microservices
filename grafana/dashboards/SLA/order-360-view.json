@@ -1,0 +1,383 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 34,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM raw_oeordh WHERE ('${order_id}' = '' OR \"ORDER\"::text = '${order_id}') ORDER BY received_at DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Order Header",
+      "type": "table"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM raw_oeordl WHERE ('${order_id}' = '' OR \"LORDER\"::text = '${order_id}') ORDER BY received_at DESC",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Order Lines",
+      "type": "table"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM raw_otslog WHERE ('${order_id}' = '' OR \"OLORD#\"::text = '${order_id}') and olbran = 350 order BY received_at ASC",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Order Logs (OTS)",
+      "type": "table"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "fillOpacity": 70,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "Delayed": {
+                  "color": "red",
+                  "text": "Delayed"
+                },
+                "Moving Slow": {
+                  "color": "yellow",
+                  "text": "Moving Slow"
+                },
+                "OK": {
+                  "color": "green",
+                  "text": "OK"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 4,
+      "options": {
+        "alignValue": "left",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "mergeValues": false,
+        "rowHeight": 0.8,
+        "showValue": "auto",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH stages AS (\r\n  SELECT\r\n    order_id,\r\n    'PICK' AS stage,\r\n    pick_start_ts AS start_ts,\r\n    COALESCE(pick_complete_ts, now()) AS end_ts,\r\n    pick_sla_minutes AS sla_target\r\n  FROM order_sla_evaluation\r\n  WHERE ('${order_id}' = '' OR order_id::text = '${order_id}')\r\n\r\n  UNION ALL\r\n\r\n  SELECT\r\n    order_id,\r\n    'STAGE_STARTED',\r\n    pick_complete_ts,\r\n    COALESCE(stage_start_ts, now()),\r\n    stage_sla_minutes\r\n  FROM order_sla_evaluation\r\n  WHERE ('${order_id}' = '' OR order_id::text = '${order_id}')\r\n\r\n  UNION ALL\r\n\r\n  SELECT\r\n    order_id,\r\n    'STAGE_COMPLETED',\r\n    stage_start_ts,\r\n    COALESCE(stage_complete_ts, now()),\r\n    stage_complete_sla_minutes\r\n  FROM order_sla_evaluation\r\n  WHERE ('${order_id}' = '' OR order_id::text = '${order_id}')\r\n\r\n  UNION ALL\r\n\r\n  SELECT\r\n    order_id,\r\n    'SHIP',\r\n    stage_complete_ts,\r\n    COALESCE(ship_ts, now()),\r\n    ship_sla_minutes\r\n  FROM order_sla_evaluation\r\n  WHERE ('${order_id}' = '' OR order_id::text = '${order_id}')\r\n)\r\n\r\nSELECT\r\n  stage AS state,\r\n  start_ts AS time,\r\n  end_ts AS time_end,\r\n  ROUND(EXTRACT(EPOCH FROM (end_ts - start_ts)) / 60, 1) AS duration_min,\r\n  sla_target,\r\n  ROUND(\r\n    (EXTRACT(EPOCH FROM (end_ts - start_ts)) / 60)\r\n    / NULLIF(sla_target, 0) * 100,\r\n    1\r\n  ) AS sla_progress_pct,\r\n  CASE\r\n    WHEN EXTRACT(EPOCH FROM (end_ts - start_ts)) / 60 >= sla_target THEN 'Delayed'\r\n    WHEN EXTRACT(EPOCH FROM (end_ts - start_ts)) / 60 >= sla_target * 0.25 THEN 'Moving Slow'\r\n    ELSE 'OK'\r\n  END AS sla_status\r\nFROM stages\r\nWHERE start_ts IS NOT NULL\r\nORDER BY time ASC;   -- ✅ THIS LINE FIXES THE ERROR\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "SLA Gantt Timeline (Stage Duration & Breach)",
+      "type": "state-timeline"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 42,
+  "tags": [
+    "Orders",
+    "SLA",
+    "Lifecycle",
+    "Audit"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "TimescaleDB",
+          "value": "P40AE60E18F02DE32"
+        },
+        "label": "Data source",
+        "name": "ds",
+        "options": [],
+        "query": "postgres",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "990008",
+          "value": "990008"
+        },
+        "label": "Order ID",
+        "name": "order_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "990008",
+            "value": "990008"
+          }
+        ],
+        "query": "990008",
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "2025-12-24T13:27:27.509Z",
+    "to": "2025-12-26T13:27:27.509Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Order 360° View – Header, Lines, Logs & SLA Timeline",
+  "uid": "ORDER_360",
+  "version": 9
+}

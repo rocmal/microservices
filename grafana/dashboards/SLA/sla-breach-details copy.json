@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 0,
+  "id": 31,
   "links": [],
   "panels": [
     {
@@ -229,6 +229,24 @@
                 ]
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View Order Details",
+                    "url": "/d/ORDER_DETAIL/order-details-e28093-derived-sla-evaluation\r\n?orgId=1\r\n&from=${__from}\r\n&to=${__to}\r\n&timezone=browser\r\n&var-ds=${ds}\r\n&var-order_type=${__data.fields.order_type}\r\n&var-sla_status=${__data.fields.status}\r\n&var-sla_stage=PICK\r\n&var-order_id="
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -249,7 +267,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  order_type,\r\n  pick_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE pick_breach_state IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, pick_breach_state;\r\n",
+          "rawSql": "SELECT\r\n  order_type,\r\n  pick_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE pick_breach_state IN ('Delayed','Moving Slow')\r\n\r\n  -- ✅ Time filter\r\n  AND $__timeFilter(order_created_ts)\r\n\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\n  AND pick_breach_state IS NOT NULL\r\nGROUP BY order_type, pick_breach_state;\r\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -481,6 +499,24 @@
                 ]
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "ORDER DETAILS",
+                    "url": "/d/ORDER_DETAIL/order-details-e28093-derived-sla-evaluation\r\n?orgId=1\r\n&from=${__from}\r\n&to=${__to}\r\n&timezone=browser\r\n&var-ds=${ds}\r\n&var-order_type=${__data.fields.order_type}\r\n&var-sla_status=${__data.fields.status}\r\n&var-sla_stage=STAGE_STARTED\n&var-order_id="
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -501,7 +537,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  order_type,\r\n  stage_started_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE stage_started_breach_state IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, stage_started_breach_state;",
+          "rawSql": "SELECT\r\n  order_type,\r\n  stage_started_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE stage_started_breach_state IN ('Delayed','Moving Slow')\r\n  AND $__timeFilter(order_created_ts)\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, stage_started_breach_state;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -733,6 +769,23 @@
                 ]
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "ORDER DETAILS",
+                    "url": "/d/ORDER_DETAIL/order-details-e28093-derived-sla-evaluation\r\n?orgId=1\r\n&from=${__from}\r\n&to=${__to}\r\n&timezone=browser\r\n&var-ds=${ds}\r\n&var-order_type=${__data.fields.order_type}\r\n&var-sla_status=${__data.fields.status}\r\n&var-sla_stage=STAGE_COMPLETED\n&var-order_id="
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -753,7 +806,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  order_type,\r\n  stage_complete_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE stage_complete_breach_state IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, stage_complete_breach_state;",
+          "rawSql": "SELECT\r\n  order_type,\r\n  stage_complete_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE stage_complete_breach_state IN ('Delayed','Moving Slow')\r\n-- ✅ Time filter\r\n  AND $__timeFilter(order_created_ts)\r\n\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, stage_complete_breach_state;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -985,6 +1038,24 @@
                 ]
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "ORDER DETAILS",
+                    "url": "/d/ORDER_DETAIL/order-details-e28093-derived-sla-evaluation\r\n?orgId=1\r\n&from=${__from}\r\n&to=${__to}\r\n&timezone=browser\r\n&var-ds=${ds}\r\n&var-order_type=${__data.fields.order_type}\r\n&var-sla_status=${__data.fields.status}\r\n&var-sla_stage=SHIP\n&var-order_id="
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -1005,7 +1076,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  order_type,\r\n  ship_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE ship_breach_state IN ('Delayed','Moving Slow')\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, ship_breach_state;\r\n",
+          "rawSql": "SELECT\r\n  order_type,\r\n  ship_breach_state AS status,\r\n  COUNT(*) AS count\r\nFROM order_sla_breach_reporting\r\nWHERE ship_breach_state IN ('Delayed','Moving Slow')\r\n-- ✅ Time filter\r\n  AND $__timeFilter(order_created_ts)\r\n\r\n  AND (\r\n        '$__all' IN (${breach_scope:singlequote})\r\n        OR breach_scope IN (${breach_scope:singlequote})\r\n      )\r\n  AND (\r\n        '${order_type:regex}' = '.*'\r\n        OR order_type ~ '${order_type:regex}'\r\n      )\r\nGROUP BY order_type, ship_breach_state;\r\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1050,11 +1121,9 @@
       {
         "allValue": ".*",
         "current": {
-          "text": [
-            "RockAuto"
-          ],
+          "text": "All",
           "value": [
-            "RockAuto"
+            "$__all"
           ]
         },
         "datasource": "${ds}",
@@ -1068,7 +1137,7 @@
             "value": "Ecommerce"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "RockAuto",
             "value": "RockAuto"
           }
@@ -1100,12 +1169,12 @@
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-90d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "SLA Breach Monitoring (Pick / Stage Started / Stage Completed / Ship)",
   "uid": "SLA_BREACH_VALUE_MAPPING_FINAL_NEW",
-  "version": 11
+  "version": 32
 }

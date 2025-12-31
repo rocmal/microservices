@@ -1,0 +1,320 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 33,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "panels": [],
+      "title": "SLA Evaluation – Order List",
+      "type": "row"
+    },
+    {
+      "datasource": "${ds}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "applyToRow": true,
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Delayed": {
+                        "color": "red"
+                      },
+                      "Moving Slow": {
+                        "color": "yellow"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sla_progress_pct"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "colorMode": "thresholds",
+                  "max": 150,
+                  "min": 0,
+                  "type": "bar"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "order_id"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "View OTSLOG",
+                    "url": "/d/ORDER_360/order-360-view-header-lines-logs-sla-timeline\r\n?orgId=1\r\n&from=${__from}\r\n&to=${__to}\r\n&timezone=browser\r\n&var-order_id=${__value}\r\n&var-ds=${ds}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH base AS (\r\n  SELECT\r\n    order_id,\r\n    order_type,\r\n    order_created_ts,\r\n    breach_scope,\r\n    ship_method,\r\n    route_type,\r\n\r\n    CASE\r\n      WHEN '${sla_stage}' = 'PICK'\r\n        THEN pick_breach_state\r\n      WHEN '${sla_stage}' = 'STAGE_STARTED'\r\n        THEN stage_started_breach_state\r\n      WHEN '${sla_stage}' = 'STAGE_COMPLETED'\r\n        THEN stage_complete_breach_state\r\n      WHEN '${sla_stage}' = 'SHIP'\r\n        THEN ship_breach_state\r\n    END AS status\r\n\r\n  FROM order_sla_breach_reporting\r\n  WHERE\r\n    ('${order_type:regex}' = '.*' OR order_type ~ '${order_type:regex}')\r\n    AND ('${order_id}' = '' OR order_id::text = '${order_id}')\r\n    AND $__timeFilter(order_created_ts)\r\n)\r\n\r\nSELECT\r\n  order_id,\r\n  order_type,\r\n  status,\r\n  order_created_ts,\r\n  breach_scope,\r\n  ship_method,\r\n  route_type\r\nFROM base\r\nWHERE\r\n  '${sla_status:regex}' = '.*'\r\n  OR status = '${sla_status:regex}'\r\nORDER BY order_created_ts DESC;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Order SLA Details",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "TimescaleDB",
+          "value": "P40AE60E18F02DE32"
+        },
+        "name": "ds",
+        "options": [],
+        "query": "postgres",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "RockAuto",
+          "value": "RockAuto"
+        },
+        "datasource": "${ds}",
+        "includeAll": true,
+        "name": "order_type",
+        "options": [
+          {
+            "selected": false,
+            "text": "Ecommerce",
+            "value": "Ecommerce"
+          },
+          {
+            "selected": true,
+            "text": "RockAuto",
+            "value": "RockAuto"
+          }
+        ],
+        "query": "SELECT DISTINCT order_type FROM order_sla_evaluation ORDER BY 1",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "PICK",
+          "value": "PICK"
+        },
+        "name": "sla_stage",
+        "options": [
+          {
+            "selected": true,
+            "text": "PICK",
+            "value": "PICK"
+          },
+          {
+            "selected": false,
+            "text": "STAGE_STARTED",
+            "value": "STAGE_STARTED"
+          },
+          {
+            "selected": false,
+            "text": "STAGE_COMPLETED",
+            "value": "STAGE_COMPLETED"
+          },
+          {
+            "selected": false,
+            "text": "SHIP",
+            "value": "SHIP"
+          }
+        ],
+        "query": "PICK,STAGE_STARTED,STAGE_COMPLETED,SHIP",
+        "type": "custom"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "Delayed",
+          "value": "Delayed"
+        },
+        "includeAll": true,
+        "name": "sla_status",
+        "options": [
+          {
+            "selected": true,
+            "text": "Delayed",
+            "value": "Delayed"
+          },
+          {
+            "selected": false,
+            "text": "Moving Slow",
+            "value": "Moving Slow"
+          }
+        ],
+        "query": "Delayed,Moving Slow",
+        "type": "custom"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "label": "Order ID",
+        "name": "order_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "2025-12-24T13:27:27.509Z",
+    "to": "2025-12-26T13:27:27.509Z"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "ORDER DETAILS – Derived SLA Evaluation",
+  "uid": "ORDER_DETAIL",
+  "version": 20
+}

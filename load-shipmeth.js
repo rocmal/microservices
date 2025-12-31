@@ -15,12 +15,14 @@ async function createTable() {
     DROP TABLE IF EXISTS ship_meth CASCADE;
     
     CREATE TABLE ship_meth (
+      id SERIAL PRIMARY KEY,
       branch INTEGER NOT NULL,
       dlvrcd VARCHAR(10) NOT NULL,
+      rte_id INTEGER,
       route_type VARCHAR(1),
       route_name VARCHAR(100),
       created_at TIMESTAMPTZ DEFAULT NOW(),
-      PRIMARY KEY (branch, dlvrcd)
+      CONSTRAINT ship_meth_branch_dlvrcd_unique UNIQUE (branch, dlvrcd)
     );
     
     CREATE INDEX idx_ship_meth_branch ON ship_meth(branch);
@@ -31,7 +33,7 @@ async function createTable() {
 }
 
 async function loadData() {
-  const csvPath = path.join(__dirname, 'sample-data', 'Ship_meth.csv');
+  const csvPath = path.join(__dirname, 'route_type.csv');
   const csvContent = fs.readFileSync(csvPath, 'utf-8');
   const lines = csvContent.trim().split('\n');
   
@@ -46,23 +48,25 @@ async function loadData() {
     
     const values = line.split(',');
     
-    // Parse and trim values
-    const branch = parseInt(values[0]);
+    // Parse and trim values (CSV: branch, dlvcrd, rte_id, route_name, route_type)
+    const branch = values[0] ? parseInt(values[0]) : null;
     const dlvrcd = values[1]?.trim() || null;
-    const route_type = values[2]?.trim() || null;
+    const rte_id = values[2] ? parseInt(values[2]) : null;
     const route_name = values[3]?.trim() || null;
-    
+    const route_type = values[4]?.trim() || null;
+
     try {
       await client.query(
-        `INSERT INTO ship_meth (branch, dlvrcd, route_type, route_name)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO ship_meth (rte_id, branch, dlvrcd, route_name, route_type)
+         VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (branch, dlvrcd) DO UPDATE SET
+           rte_id = EXCLUDED.rte_id,
            route_type = EXCLUDED.route_type,
            route_name = EXCLUDED.route_name`,
-        [branch, dlvrcd, route_type, route_name]
+        [rte_id, branch, dlvrcd, route_name, route_type]
       );
       insertedCount++;
-      
+
     } catch (error) {
       errorCount++;
       console.error(`\n   Error on line ${i + 1}:`, error.message);

@@ -1,7 +1,4 @@
--- =========================================================
--- FINAL SLA IMPLEMENTATION (LOCKED – PRODUCTION READY)
--- Author : Puneet Mehra
--- Date   : December 2025
+-- Removed problematic ALTER TABLE statements that target views. Only valid table operations remain.
 --
 -- CONTRACT:
 --  - ONLY Delayed / Moving Slow are reported
@@ -17,9 +14,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 -- =========================================================
--- STEP 1: raw_otslog.event_ts (TRIGGER-ONLY, IMMUTABLE SAFE)
--- =========================================================
-ALTER TABLE raw_otslog DROP COLUMN IF EXISTS event_ts;
+-- ALTER TABLE raw_otslog DROP COLUMN IF EXISTS event_ts; -- Removed to avoid errors if raw_otslog is a view
 ALTER TABLE raw_otslog ADD COLUMN event_ts TIMESTAMPTZ;
 
 CREATE OR REPLACE FUNCTION set_event_ts()
@@ -74,7 +69,7 @@ SELECT
     WHEN MOD(oh.cusno,10000000000)=64356 THEN 'RockAuto'
     WHEN sm.route_type='C' THEN 'StoreFulfillment'
     WHEN sm.route_type='H' THEN 'HotShot'
-    WHEN sm.route_type='T' THEN 'Transfer'
+    WHEN sm.route_type='T' THEN 'Transfer'    docker exec -it timescaledb psql -U admin -d grafana -c "INSERT INTO raw_oeordh (brnch, \"ORDER\", cusno, dlvrcd, otype, rstat, fdate) VALUES (350, 90001, 12345678901, 'PHO', 3, 1, 20251230);"
     WHEN sm.route_type='R' THEN 'Route'
     WHEN sm.route_type IS NULL THEN 'Ecommerce'
     ELSE 'Regular'
@@ -413,3 +408,21 @@ SELECT matviewname
 FROM pg_matviews
 WHERE matviewname LIKE 'sla_%_5min_mv'
 ORDER BY matviewname;
+
+CREATE TABLE capacity_config_shift (
+    id               BIGSERIAL PRIMARY KEY,
+
+    branch            INT NOT NULL,              -- e.g. 350
+    stage             TEXT NOT NULL,             -- PICK, STAGE_STARTED, STAGE_COMPLETED, SHIP
+
+    shift_name        TEXT NOT NULL,             -- MORNING, EVENING, NIGHT
+    shift_start_time  TIME NOT NULL,             -- 08:00
+    shift_end_time    TIME NOT NULL,             -- 16:00
+
+    capacity_per_hr   NUMERIC NOT NULL,          -- e.g. 100 orders/hour
+    window_size       INT NOT NULL DEFAULT 5,    -- minutes (Grafana bucket size)
+
+    is_active         BOOLEAN DEFAULT true,
+    created_at        TIMESTAMPTZ DEFAULT now(),
+    updated_at        TIMESTAMPTZ DEFAULT now()
+);
